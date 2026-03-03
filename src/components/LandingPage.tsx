@@ -73,7 +73,15 @@ const faqs = [
   {
     q: "Where are my markdown files saved?",
     a: "Files you create in the left sidebar are stored in localStorage as a small virtual file tree. You can also drag in existing .md files and export them as .md, .html, or a ZIP bundle at any time.",
-  }
+  },
+  {
+    q: "How does session sharing work?",
+    a: "Click \"Start session\" in the toolbar to begin a real-time collaboration session. Copy the link and share it with others — they can join and edit the same document with you. No backend server is required; it uses WebRTC for peer-to-peer sync.",
+  },
+  {
+    q: "Is it mobile and tablet friendly?",
+    a: "Yes. The editor adapts to smaller screens: the sidebar and AI panel become overlays, the layout stacks vertically, and touch-friendly controls are available. You can write and preview markdown on phones and tablets.",
+  },
 ];
 
 function FeatureIcon({ path }: { path: string }) {
