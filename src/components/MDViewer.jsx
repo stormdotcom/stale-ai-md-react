@@ -242,7 +242,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .gem{width:14px;height:14px;background:linear-gradient(135deg,var(--acc) 40%,var(--purple));border-radius:3px;flex-shrink:0}
 
 /* root layout */
-.root{display:flex;height:calc(100vh - 32px - 22px)}
+.root{display:flex;height:calc(100vh - 32px - 22px);position:relative;overflow:hidden}
 
 /* activity bar */
 .actbar{width:46px;background:var(--s1);border-right:1px solid var(--bd2);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;flex-shrink:0}
@@ -347,19 +347,30 @@ textarea.raw::selection{background:var(--sel)}
 .pb tr:hover td{background:#111820}
 .pb img{max-width:100%;border-radius:6px;border:1px solid var(--bd);display:block;margin:1em 0}
 
-/* ── AI PANEL ── */
-.aipanel{width:300px;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s ease}
-.aipanel.closed{width:0;border:none;display:none}
-
-@media (max-width: 960px){
-  .aipanel{
-    position:absolute;
-    right:0;
-    top:32px;
-    bottom:22px;
-    z-index:40;
-    box-shadow:0 0 0 1px var(--bd);
-  }
+/* ── AI PANEL (drawer) ── */
+.aipanel{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  width:320px;
+  max-width:100%;
+  background:var(--s1);
+  border-left:1px solid var(--bd);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  transform:translateX(100%);
+  transition:transform .25s ease, box-shadow .25s ease;
+  z-index:40;
+}
+.aipanel.open{
+  transform:translateX(0);
+  box-shadow:-18px 0 40px rgba(0,0,0,.55);
+}
+.aipanel.closed{
+  pointer-events:none;
+  box-shadow:none;
 }
 
 /* Responsive layout tweaks */
@@ -914,6 +925,7 @@ export default function MDViewer() {
   const taRef   = useRef(null);
   const gutRef  = useRef(null);
   const fileRef = useRef(null);
+  const folderRef = useRef(null);
   const prevRef = useRef(null);
   const styleRef = useRef(null);
   const rzDrag  = useRef({ on:false, x0:0, w0:0 });
@@ -1150,10 +1162,50 @@ export default function MDViewer() {
     r.readAsText(file);
   };
 
+  const loadFolder = files => {
+    if (!files?.length) return;
+    const mdFiles = Array.from(files).filter(f => /\.(md|markdown|txt)$/i.test(f.name));
+    if (mdFiles.length === 0) {
+      showToast("No .md/.txt files found in folder", "err");
+      return;
+    }
+    const readFile = file =>
+      new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = e => {
+          const path = normalizeFileName(file.webkitRelativePath || file.name);
+          resolve({ path, content: e.target.result });
+        };
+        r.readAsText(file);
+      });
+    Promise.all(mdFiles.map(readFile)).then(results => {
+      setFileTree(tree => {
+        const next = { ...tree };
+        results.forEach(({ path, content }) => { next[path] = content; });
+        return next;
+      });
+      setActiveFile(results[0].path);
+      showToast(`Imported ${results.length} files`, "ok");
+    });
+  };
+
   // ── DnD
   const onDE = e => { e.preventDefault(); dc.current++; setIsDragging(true); };
   const onDL = () => { dc.current--; if(dc.current<=0){dc.current=0;setIsDragging(false);} };
-  const onDrop = e => { e.preventDefault(); dc.current=0; setIsDragging(false); loadFile(e.dataTransfer.files[0]); };
+  const onDrop = e => {
+    e.preventDefault();
+    dc.current = 0;
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (!files?.length) return;
+    const hasFolder = files.length > 1 || (files[0]?.webkitRelativePath?.length > 0);
+    if (hasFolder) {
+      const mdFiles = Array.from(files).filter(f => /\.(md|markdown|txt)$/i.test(f.name));
+      loadFolder(mdFiles.length ? mdFiles : files);
+    } else {
+      loadFile(files[0]);
+    }
+  };
 
   // ── Resizer
   useEffect(() => {
@@ -1224,6 +1276,39 @@ img { max-width: 100%; }
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      });
+      return;
+    } else if (type === "zip-all") {
+      const entries = Object.entries(fileTree).filter(([p]) => !p.endsWith("/"));
+      if (entries.length === 0) {
+        showToast("No files to export", "err");
+        return;
+      }
+      const zip = new JSZip();
+      const htmlStyle = `body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}
+pre{background:#f5f5f5;padding:16px;border-radius:6px;overflow-x:auto}
+code{font-family:monospace;font-size:.9em}
+blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.5em 1em;color:#555}
+table{border-collapse:collapse;width:100%;margin:1em 0}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f5f5f5}
+img{max-width:100%}`;
+      entries.forEach(([path, content]) => {
+        const base = path.replace(/\.[^.]+$/, "") || "document";
+        zip.file(`${base}.md`, content);
+        const html = parseMarkdown(content);
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${path}</title><style>${htmlStyle}</style></head><body>${html}</body></html>`;
+        zip.file(`${base}.html`, fullHtml);
+      });
+      const zipName = "markdown-studio-export.zip";
+      zip.generateAsync({ type: "blob" }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = zipName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${entries.length} files as zip`, "ok");
       });
       return;
     }
@@ -1440,6 +1525,7 @@ img { max-width: 100%; }
           {/* View toolbar */}
           <div className="vtbar">
             <button className="vb" onClick={()=>fileRef.current.click()}>{Ic.open} Open</button>
+            <button className="vb" onClick={()=>folderRef.current?.click()} title="Import folder (.md files)">{Ic.folder} Import folder</button>
             <div className="vsep"/>
             <button className={`vb${view==="split"?" on":""}`}   onClick={()=>setView("split")}>⊟ Split</button>
             <button className={`vb${view==="preview"?" on":""}`} onClick={()=>setView("preview")}>{Ic.eye} Preview</button>
@@ -1450,6 +1536,8 @@ img { max-width: 100%; }
             <div className="vsep"/>
             <button className="vb" onClick={()=>downloadFile("md")}>↓ Save .md</button>
             <button className="vb" onClick={()=>downloadFile("html")}>↓ Save .html</button>
+            <button className="vb" onClick={()=>downloadFile("zip")} title="Current file as .md + .html">↓ Zip</button>
+            <button className="vb" onClick={()=>downloadFile("zip-all")} title="All files as .md + .html">↓ Export all</button>
             <div className="vsep"/>
             <button className={`vb${wordWrap ? " on" : ""}`} onClick={()=>setWordWrap(w=>!w)}>
               ↩ Wrap
@@ -1580,12 +1668,10 @@ img { max-width: 100%; }
           </div>
         </div>
 
-        {/* AI Panel */}
-        {aiOpen && (
-          <div className="aipanel">
-            <AIPanel md={md} selection={selection} onApply={handleAIApply}/>
-          </div>
-        )}
+        {/* AI Panel (drawer overlay, does not affect layout) */}
+        <div className={`aipanel ${aiOpen ? "open" : "closed"}`}>
+          <AIPanel md={md} selection={selection} onApply={handleAIApply}/>
+        </div>
       </div>
 
       {/* Status bar */}
@@ -1625,6 +1711,7 @@ img { max-width: 100%; }
       {toast && <div className={`toast${toast.type==="ok"?" ok":""}`}>{toast.type==="ok"?"✓ ":"⚠ "}{toast.msg}</div>}
 
       <input ref={fileRef} type="file" accept=".md,.markdown,.txt" style={{display:"none"}} onChange={e=>loadFile(e.target.files[0])}/>
+      <input ref={folderRef} type="file" webkitdirectory="true" directory="true" multiple style={{display:"none"}} onChange={e=>{loadFolder(e.target.files);e.target.value="";}}/>
     </div>
   );
 }
