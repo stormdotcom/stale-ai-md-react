@@ -71,3 +71,11 @@ It combines a keyboard‑friendly editor, live preview, and an AI assistant that
 - Custom markdown parser + renderer for tight control over output.
 
 This UI is designed to feel like a focused dev tool: everything you need to write, preview, and refactor markdown with AI, in a single screen.
+
+## License
+
+MIT © [Ajmal Nasumudeen](https://ajmalnasumudeen.in/)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

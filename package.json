@@ -1,7 +1,27 @@
 {
-  "name": "markdown-viwer-x",
-  "private": true,
-  "version": "0.0.0",
+  "name": "slateai-markdown-studio",
+  "version": "0.1.0",
+  "description": "AI-powered markdown editor with live preview, file management, and real-time collaboration",
+  "author": "Ajmal Nasumudeen <https://ajmalnasumudeen.in/>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stormdotcom/stale-ai-md-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stormdotcom/stale-ai-md-react/issues"
+  },
+  "homepage": "https://github.com/stormdotcom/stale-ai-md-react#readme",
+  "keywords": [
+    "markdown",
+    "editor",
+    "ai",
+    "ollama",
+    "gemini",
+    "openai",
+    "collaboration",
+    "webrtc"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

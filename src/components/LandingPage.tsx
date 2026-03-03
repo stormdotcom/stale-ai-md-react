@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Server, Sparkles, Bot } from "lucide-react";
 
 const features = [
   {
@@ -775,9 +776,9 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           }}
         >
           {[
-            { name: "Ollama", sub: "Local & Private", color: "#3fb950" },
-            { name: "Gemini", sub: "Google AI", color: "#58a6ff" },
-            { name: "OpenAI", sub: "GPT Models", color: "#d2a8ff" },
+            { name: "Ollama", sub: "Local & Private", color: "#3fb950", Icon: Server },
+            { name: "Gemini", sub: "Google AI", color: "#58a6ff", Icon: Sparkles },
+            { name: "OpenAI", sub: "GPT Models", color: "#d2a8ff", Icon: Bot },
           ].map((p) => (
             <div
               key={p.name}
@@ -787,14 +788,31 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
                 borderRadius: "12px",
                 padding: "24px 40px",
                 minWidth: "180px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "12px",
               }}
             >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "12px",
+                  background: `${p.color}20`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <p.Icon size={24} color={p.color} strokeWidth={2} />
+              </div>
               <div
                 style={{
                   fontSize: "20px",
                   fontWeight: 700,
                   color: p.color,
-                  marginBottom: "4px",
+                  marginBottom: "0",
                 }}
               >
                 {p.name}
