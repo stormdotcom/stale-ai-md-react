@@ -60,6 +60,29 @@ const sddSteps = [
   },
 ];
 
+const faqs = [
+  {
+    q: "Do my API keys or documents ever leave my machine?",
+    a: "No. SlateAI Markdown Studio runs entirely in your browser. Provider settings are stored in localStorage and requests go directly from your browser to Ollama, Gemini, or OpenAI. There is no custom backend in this app.",
+  },
+  {
+    q: "Can I use Ollama completely offline?",
+    a: "Yes. As long as your Ollama server is running on your machine and reachable at the configured base URL, the editor can format your markdown with no external network calls.",
+  },
+  {
+    q: "Where are my markdown files saved?",
+    a: "Files you create in the left sidebar are stored in localStorage as a small virtual file tree. You can also drag in existing .md files and export them as .md, .html, or a ZIP bundle at any time.",
+  },
+  {
+    q: "Does multi-user editing require a backend?",
+    a: "No. Collaboration uses Yjs with a WebRTC provider so browsers sync changes peer-to-peer. It is designed for light, ad-hoc collaboration sessions without running your own server.",
+  },
+  {
+    q: "Is this production-ready or just a demo?",
+    a: "The app is open-source and built like a real dev tool: TypeScript, React 19, Vite, Tailwind, and a custom markdown engine. You can fork it, extend it, or embed the editor in your own products.",
+  },
+];
+
 function FeatureIcon({ path }: { path: string }) {
   return (
     <svg
@@ -148,12 +171,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <a
-            href="#spec-driven"
-            style={{ color: "#8b949e", textDecoration: "none", fontSize: "14px" }}
-          >
-            Spec Driven Dev
-          </a>
+         
           <a
             href="#features"
             style={{ color: "#8b949e", textDecoration: "none", fontSize: "14px" }}
@@ -795,15 +813,66 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         </div>
       </section>
 
-      {/* SSR & Performance Note */}
+      {/* FAQ */}
       <section
+        id="faq"
         style={{
-          maxWidth: "800px",
+          maxWidth: "900px",
           margin: "0 auto 80px",
           padding: "0 24px",
         }}
       >
-       
+        <h2
+          style={{
+            textAlign: "center",
+            fontSize: "28px",
+            fontWeight: 700,
+            color: "#f0f6fc",
+            marginBottom: "24px",
+          }}
+        >
+          Frequently asked questions
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          {faqs.map((item) => (
+            <div
+              key={item.q}
+              style={{
+                background: "#161b22",
+                border: "1px solid #21262d",
+                borderRadius: "12px",
+                padding: "18px 20px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  color: "#f0f6fc",
+                  margin: "0 0 8px",
+                }}
+              >
+                {item.q}
+              </h3>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#8b949e",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                {item.a}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* CTA */}
@@ -874,14 +943,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           </a>
           .
         </div>
-        <div style={{ marginTop: "8px" }}>
-          <a
-            href="https://stale-ai.vercel.app"
-            style={{ color: "#484f58", textDecoration: "none" }}
-          >
-            stale-ai.vercel.app
-          </a>
-        </div>
+  
       </footer>
     </div>
   );
