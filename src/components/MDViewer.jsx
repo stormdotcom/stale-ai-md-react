@@ -254,7 +254,10 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 
 /* file sidebar */
 .filesb{background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;transition:width .18s ease;flex-shrink:0}
-.sb-hd{padding:12px 14px 7px;font-size:10px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0}
+.sb-hd{padding:12px 14px 7px;font-size:10px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sb-hd-actions{display:flex;gap:4px}
+.sb-btn{background:transparent;border:1px solid var(--bd2);color:var(--dim);border-radius:4px;padding:4px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.sb-btn:hover{background:var(--s2);color:var(--text)}
 .sb-sc{flex:1;overflow-y:auto;padding:2px 0 8px}
 .fe{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 18px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s}
 .fe:hover{background:var(--s3);color:var(--text)}
@@ -1412,7 +1415,19 @@ img{max-width:100%}`;
         {/* File sidebar */}
         <div className="filesb" style={{width:sbOpen?220:0,borderRight:sbOpen?undefined:"none"}}>
           <div className="sb-hd">
-            {sidebar==="outline"?"Outline":"Open Files"}
+            <span>{sidebar==="outline"?"Outline":"Open Files"}</span>
+            {sidebar==="files" && (
+              <div className="sb-hd-actions">
+                <button className="sb-btn" onClick={()=>{
+                  const name = window.prompt("New file name", "untitled.md") || "untitled.md";
+                  const norm = normalizeFileName(name);
+                  setFileTree(tree => ({ ...tree, [norm]: "" }));
+                  setActiveFile(norm);
+                  showToast(`Created ${norm}`, "ok");
+                }} title="New file">{Ic.plus}</button>
+                <button className="sb-btn" onClick={()=>folderRef.current?.click()} title="Import folder">{Ic.folder}</button>
+              </div>
+            )}
           </div>
           <div className="sb-sc">
             {sidebar==="files" && (
