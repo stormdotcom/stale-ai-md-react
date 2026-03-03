@@ -1326,33 +1326,65 @@ img { max-width: 100%; }
 
         {/* File sidebar */}
         <div className="filesb" style={{width:sbOpen?220:0,borderRight:sbOpen?undefined:"none"}}>
-          <div className="sb-hd">{sidebar==="outline"?"Outline":"Open Files"}</div>
+          <div className="sb-hd">
+            {sidebar==="outline"?"Outline":"Open Files"}
+          </div>
           <div className="sb-sc">
             {sidebar==="files" && (
-              <div
-                className="fe on"
-                onContextMenu={e => {
-                  e.preventDefault();
-                  const choice = (window.prompt("File actions: (n) new .md, (f) move into folder, (r) rename", "n/r/f") || "").toLowerCase();
-                  if (choice.startsWith("n")) {
-                    const name = window.prompt("New file name", "untitled.md") || "untitled.md";
-                    const norm = normalizeFileName(name);
-                    setFileName(norm);
-                    commit("");
-                  } else if (choice.startsWith("f")) {
-                    const folder = window.prompt("Folder name", "notes") || "notes";
-                    const base = fileName.split("/").pop() || "untitled.md";
-                    const norm = normalizeFileName(`${folder}/${base}`);
-                    setFileName(norm);
-                  } else if (choice.startsWith("r")) {
-                    const name = window.prompt("Rename file", fileName) || fileName;
-                    const norm = normalizeFileName(name);
-                    setFileName(norm);
-                  }
-                }}
-              >
-                <span style={{fontSize:13}}>📄</span>{fileName}
-              </div>
+              <>
+                {Object.keys(fileTree).sort().map(path => {
+                  const segments = path.split("/");
+                  const depth = segments.length - 1;
+                  const label = segments[segments.length-1];
+                  const isActive = path === activeFile;
+                  return (
+                    <div
+                      key={path}
+                      className={`fe${isActive ? " on" : ""}`}
+                      style={{ paddingLeft: 18 + depth * 10 }}
+                      onClick={() => setActiveFile(path)}
+                      onContextMenu={e => {
+                        e.preventDefault();
+                        const choice = (window.prompt("File actions: (n) new file here, (r) rename, (d) delete", "n/r/d") || "").toLowerCase();
+                        if (choice.startsWith("n")) {
+                          const name = window.prompt("New file name", "untitled.md") || "untitled.md";
+                          const folder = segments.slice(0,-1).join("/");
+                          const norm = normalizeFileName(folder ? `${folder}/${name}` : name);
+                          setFileTree(tree => ({
+                            ...tree,
+                            [norm]: "",
+                          }));
+                          setActiveFile(norm);
+                        } else if (choice.startsWith("r")) {
+                          const name = window.prompt("Rename file", path) || path;
+                          const norm = normalizeFileName(name);
+                          setFileTree(tree => {
+                            const next = {...tree};
+                            const content = next[path];
+                            delete next[path];
+                            next[norm] = content;
+                            return next;
+                          });
+                          if (activeFile === path) setActiveFile(norm);
+                        } else if (choice.startsWith("d")) {
+                          if (!window.confirm(`Delete ${path}?`)) return;
+                          setFileTree(tree => {
+                            const next = {...tree};
+                            delete next[path];
+                            return Object.keys(next).length ? next : { "welcome.md": SAMPLE };
+                          });
+                          if (activeFile === path) {
+                            const remaining = Object.keys(fileTree).filter(p => p !== path);
+                            setActiveFile(remaining[0] || "welcome.md");
+                          }
+                        }
+                      }}
+                    >
+                      <span style={{fontSize:13}}>📄</span>{label}
+                    </div>
+                  );
+                })}
+              </>
             )}
             {sidebar==="outline" && (outline.length
               ? outline.map((o,i)=>(
