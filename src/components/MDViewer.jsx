@@ -1720,6 +1720,7 @@ img{max-width:100%}`;
       <input ref={folderRef} type="file" webkitdirectory="true" directory="true" multiple style={{display:"none"}} onChange={e=>{loadFolder(e.target.files);e.target.value="";}}/>
 
       <PromptDialog
+        key={`${promptState.type}-${promptState.path}`}
         open={promptState.open}
         onOpenChange={o=>setPromptState(s=>({...s,open:o}))}
         title={promptState.title}
