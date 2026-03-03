@@ -930,6 +930,15 @@ export default function MDViewer() {
     const m = window.location.hash.match(/session=([^&]+)/);
     return m ? m[1] : null;
   });
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const m = window.location.hash.match(/session=([^&]+)/);
+      if (m && m[1] !== sessionId) setSessionId(m[1]);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [sessionId]);
   const [sessionPeers, setSessionPeers] = useState(1);
   const [promptState, setPromptState] = useState({ open: false, title: "", defaultValue: "", type: "", path: "", folder: "" });
   const [confirmState, setConfirmState] = useState({ open: false, title: "", description: "", path: "" });
@@ -948,6 +957,7 @@ export default function MDViewer() {
   const ytextRef = useRef(null);
   const webrtcRef = useRef(null);
   const mdRef = useRef(md);
+  const activeFileRef = useRef(activeFile);
 
   useEffect(() => {
     if (styleRef.current) return;
@@ -960,6 +970,9 @@ export default function MDViewer() {
   useEffect(() => {
     mdRef.current = md;
   }, [md]);
+  useEffect(() => {
+    activeFileRef.current = activeFile;
+  }, [activeFile]);
 
   // Persist file tree + active file
   useEffect(() => {
@@ -1010,12 +1023,14 @@ export default function MDViewer() {
       const next = text.toString();
       if (next === mdRef.current) return;
       isRemoteUpdate.current = true;
+      const af = activeFileRef.current;
       setHist((h) => {
         const nextHist = [...h, next];
         setHIdx(nextHist.length - 1);
         return nextHist;
       });
       setMd(next);
+      setFileTree((tree) => ({ ...tree, [af]: next }));
       isRemoteUpdate.current = false;
     };
 
@@ -1035,7 +1050,7 @@ export default function MDViewer() {
       if (ytextRef.current === text) ytextRef.current = null;
       setSessionPeers(1);
     };
-  }, [sessionId, setHist, setMd, setHIdx]);
+  }, [sessionId, setHist, setMd, setHIdx, setFileTree]);
 
   useEffect(() => {
     prevRef.current?.querySelectorAll(".cc").forEach(btn => {
