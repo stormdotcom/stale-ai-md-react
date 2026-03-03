@@ -265,8 +265,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .fe{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 18px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s;position:relative}
 .fe:hover{background:var(--s3);color:var(--text)}
 .fe.on{background:var(--s2);color:var(--bright)}
-.fe-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
-.fe:hover .fe-actions{display:flex}
+.fe-actions{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
 .fe-act{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:color .1s,background .1s;flex-shrink:0}
 .fe-act:hover{color:var(--text);background:var(--s2)}
 .fe-act.del:hover{color:var(--red)}
