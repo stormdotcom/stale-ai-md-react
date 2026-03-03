@@ -315,8 +315,8 @@ textarea.raw{flex:1;background:var(--bg);color:var(--text);border:none;outline:n
 textarea.raw::selection{background:var(--sel)}
 
 /* preview */
-.ps{flex:1;overflow-y:auto;background:var(--bg);padding:32px 44px 60px}
-.pb{max-width:700px;margin:0 auto;font-family:'Fraunces',serif;font-size:17px;line-height:1.9;color:#bdc3cd}
+.ps{flex:1;overflow-y:auto;background:var(--bg);padding:32px 32px 60px}
+.pb{max-width:none;width:100%;margin:0 auto;font-family:'Fraunces',serif;font-size:17px;line-height:1.9;color:#bdc3cd}
 .pb h1{font-family:'Fraunces',serif;font-size:2.1em;font-weight:600;color:var(--bright);line-height:1.2;margin:0 0 10px;letter-spacing:-.5px}
 .pb h2{font-size:1.45em;font-weight:600;color:#e8edf2;margin:2.2em 0 .5em;padding-bottom:6px;border-bottom:1px solid var(--bd2);font-family:'Fraunces',serif}
 .pb h3{font-size:1.15em;font-weight:600;color:#d9dfe6;margin:1.8em 0 .4em}
