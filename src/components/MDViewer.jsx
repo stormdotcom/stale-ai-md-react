@@ -1581,9 +1581,11 @@ img { max-width: 100%; }
         </div>
 
         {/* AI Panel */}
-        <div className={`aipanel${aiOpen?"":" closed"}`}>
-          {aiOpen && <AIPanel md={md} selection={selection} onApply={handleAIApply}/>}
-        </div>
+        {aiOpen && (
+          <div className="aipanel">
+            <AIPanel md={md} selection={selection} onApply={handleAIApply}/>
+          </div>
+        )}
       </div>
 
       {/* Status bar */}
