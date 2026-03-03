@@ -1165,9 +1165,12 @@ img { max-width: 100%; }
                     </div>
                     <textarea ref={taRef} className="raw" value={md}
                       onChange={e=>commit(e.target.value)}
+                      onKeyDown={handleTabKey}
                       onKeyUp={trackCursor} onClick={trackCursor} onMouseUp={trackCursor}
                       onScroll={()=>{ if(gutRef.current&&taRef.current) gutRef.current.scrollTop=taRef.current.scrollTop; }}
-                      spellCheck={false} placeholder="# Start writing…"/>
+                      spellCheck={false} placeholder="# Start writing…"
+                      style={{ whiteSpace: wordWrap ? "pre-wrap" : "pre", wordBreak: wordWrap ? "break-word" : "normal" }}
+                    />
                   </div>
                 </div>
 
