@@ -1,7 +1,4 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import JSZip from "jszip";
-import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -996,14 +993,22 @@ export default function MDViewer() {
   useEffect(() => {
     if (!sessionId) return;
 
-    const doc = new Y.Doc();
-    const text = doc.getText("md");
-    if (text.length === 0 && mdRef.current) {
-      text.insert(0, mdRef.current);
-    }
+    let cancelled = false;
+    let doc, text, provider;
+    (async () => {
+      const [Y, { WebrtcProvider }] = await Promise.all([
+        import("yjs"),
+        import("y-webrtc"),
+      ]);
+      if (cancelled) return;
+      doc = new Y.Doc();
+      text = doc.getText("md");
+      if (text.length === 0 && mdRef.current) {
+        text.insert(0, mdRef.current);
+      }
 
-    const room = `slateai-md-${sessionId}`;
-    const provider = new WebrtcProvider(room, doc);
+      const room = `slateai-md-${sessionId}`;
+      provider = new WebrtcProvider(room, doc);
 
     const updatePeers = () => {
       try {
@@ -1034,17 +1039,21 @@ export default function MDViewer() {
       isRemoteUpdate.current = false;
     };
 
-    text.observe(handleTextChange);
+      text.observe(handleTextChange);
 
-    ydocRef.current = doc;
-    ytextRef.current = text;
-    webrtcRef.current = provider;
+      ydocRef.current = doc;
+      ytextRef.current = text;
+      webrtcRef.current = provider;
+    })();
 
     return () => {
-      text.unobserve(handleTextChange);
-      provider.awareness.off("change", updatePeers);
-      provider.destroy();
-      doc.destroy();
+      cancelled = true;
+      if (text) text.unobserve(handleTextChange);
+      if (provider) {
+        provider.awareness.off("change", updatePeers);
+        provider.destroy();
+      }
+      if (doc) doc.destroy();
       if (webrtcRef.current === provider) webrtcRef.current = null;
       if (ydocRef.current === doc) ydocRef.current = null;
       if (ytextRef.current === text) ytextRef.current = null;
@@ -1248,7 +1257,7 @@ export default function MDViewer() {
     navigator.clipboard.writeText(txt).then(()=>{ setCopied(type); setTimeout(()=>setCopied(null),1400); });
   };
 
-  const downloadFile = type => {
+  const downloadFile = async type => {
     let content, mimeType, extension;
     if (type === "md") {
       content = md;
@@ -1278,6 +1287,7 @@ img { max-width: 100%; }
       mimeType = "text/html";
       extension = ".html";
     } else if (type === "zip") {
+      const { default: JSZip } = await import("jszip");
       const base = fileName.replace(/\.[^.]+$/, "") || "document";
       const zip = new JSZip();
       const folder = zip.folder(base);
@@ -1311,6 +1321,7 @@ img { max-width: 100%; }
         showToast("No files to export", "err");
         return;
       }
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       const htmlStyle = `body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}
 pre{background:#f5f5f5;padding:16px;border-radius:6px;overflow-x:auto}

@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import MDViewer from './components/MDViewer.jsx'
+import { useState, lazy, Suspense } from 'react'
 import LandingPage from './components/LandingPage'
+
+const MDViewer = lazy(() => import('./components/MDViewer.jsx'))
 
 function App() {
   const [view, setView] = useState<'landing' | 'editor'>('landing')
@@ -8,7 +9,9 @@ function App() {
   if (view === 'editor') {
     return (
       <div className="flex min-h-screen bg-background text-foreground">
-        <MDViewer />
+        <Suspense fallback={<div className="flex min-h-screen w-full items-center justify-center bg-[#0d1117] text-[#8b949e]">Loading editor…</div>}>
+          <MDViewer />
+        </Suspense>
       </div>
     )
   }
