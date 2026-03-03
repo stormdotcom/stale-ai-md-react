@@ -2,6 +2,14 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import JSZip from "jszip";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAMPLE
@@ -924,6 +932,8 @@ export default function MDViewer() {
     return m ? m[1] : null;
   });
   const [sessionPeers, setSessionPeers] = useState(1);
+  const [promptState, setPromptState] = useState({ open: false, title: "", defaultValue: "", type: "", path: "", folder: "" });
+  const [confirmState, setConfirmState] = useState({ open: false, title: "", description: "", path: "" });
 
   const taRef   = useRef(null);
   const gutRef  = useRef(null);
@@ -1418,13 +1428,9 @@ img{max-width:100%}`;
             <span>{sidebar==="outline"?"Outline":"Open Files"}</span>
             {sidebar==="files" && (
               <div className="sb-hd-actions">
-                <button className="sb-btn" onClick={()=>{
-                  const name = window.prompt("New file name", "untitled.md") || "untitled.md";
-                  const norm = normalizeFileName(name);
-                  setFileTree(tree => ({ ...tree, [norm]: "" }));
-                  setActiveFile(norm);
-                  showToast(`Created ${norm}`, "ok");
-                }} title="New file">{Ic.plus}</button>
+                <button className="sb-btn" onClick={()=>setPromptState({
+                  open: true, title: "New file", defaultValue: "untitled.md", type: "new", path: "", folder: ""
+                })} title="New file">{Ic.plus}</button>
                 <button className="sb-btn" onClick={()=>folderRef.current?.click()} title="Import folder">{Ic.folder}</button>
               </div>
             )}
@@ -1437,51 +1443,36 @@ img{max-width:100%}`;
                   const depth = segments.length - 1;
                   const label = segments[segments.length-1];
                   const isActive = path === activeFile;
+                  const folder = segments.slice(0,-1).join("/");
                   return (
-                    <div
-                      key={path}
-                      className={`fe${isActive ? " on" : ""}`}
-                      style={{ paddingLeft: 18 + depth * 10 }}
-                      onClick={() => setActiveFile(path)}
-                      onContextMenu={e => {
-                        e.preventDefault();
-                        const choice = (window.prompt("File actions: (n) new file here, (r) rename, (d) delete", "n/r/d") || "").toLowerCase();
-                        if (choice.startsWith("n")) {
-                          const name = window.prompt("New file name", "untitled.md") || "untitled.md";
-                          const folder = segments.slice(0,-1).join("/");
-                          const norm = normalizeFileName(folder ? `${folder}/${name}` : name);
-                          setFileTree(tree => ({
-                            ...tree,
-                            [norm]: "",
-                          }));
-                          setActiveFile(norm);
-                        } else if (choice.startsWith("r")) {
-                          const name = window.prompt("Rename file", path) || path;
-                          const norm = normalizeFileName(name);
-                          setFileTree(tree => {
-                            const next = {...tree};
-                            const content = next[path];
-                            delete next[path];
-                            next[norm] = content;
-                            return next;
-                          });
-                          if (activeFile === path) setActiveFile(norm);
-                        } else if (choice.startsWith("d")) {
-                          if (!window.confirm(`Delete ${path}?`)) return;
-                          setFileTree(tree => {
-                            const next = {...tree};
-                            delete next[path];
-                            return Object.keys(next).length ? next : { "welcome.md": SAMPLE };
-                          });
-                          if (activeFile === path) {
-                            const remaining = Object.keys(fileTree).filter(p => p !== path);
-                            setActiveFile(remaining[0] || "welcome.md");
-                          }
-                        }
-                      }}
-                    >
-                      <span style={{fontSize:13}}>📄</span>{label}
-                    </div>
+                    <ContextMenu key={path}>
+                      <ContextMenuTrigger asChild>
+                        <div
+                          className={`fe${isActive ? " on" : ""}`}
+                          style={{ paddingLeft: 18 + depth * 10 }}
+                          onClick={() => setActiveFile(path)}
+                        >
+                          <span style={{fontSize:13}}>📄</span>{label}
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem onSelect={()=>setPromptState({
+                          open: true, title: "New file in folder", defaultValue: "untitled.md", type: "newInFolder", path, folder
+                        })}>
+                          New file here
+                        </ContextMenuItem>
+                        <ContextMenuItem onSelect={()=>setPromptState({
+                          open: true, title: "Rename file", defaultValue: path, type: "rename", path, folder
+                        })}>
+                          Rename
+                        </ContextMenuItem>
+                        <ContextMenuItem onSelect={()=>setConfirmState({
+                          open: true, title: "Delete file", description: `Are you sure you want to delete ${path}?`, path
+                        })}>
+                          Delete
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   );
                 })}
               </>
@@ -1727,6 +1718,63 @@ img{max-width:100%}`;
 
       <input ref={fileRef} type="file" accept=".md,.markdown,.txt" style={{display:"none"}} onChange={e=>loadFile(e.target.files[0])}/>
       <input ref={folderRef} type="file" webkitdirectory="true" directory="true" multiple style={{display:"none"}} onChange={e=>{loadFolder(e.target.files);e.target.value="";}}/>
+
+      <PromptDialog
+        open={promptState.open}
+        onOpenChange={o=>setPromptState(s=>({...s,open:o}))}
+        title={promptState.title}
+        defaultValue={promptState.defaultValue}
+        onConfirm={value=>{
+          const { type, path, folder } = promptState;
+          const norm = normalizeFileName(value || promptState.defaultValue);
+          if (type === "new") {
+            setFileTree(tree => ({ ...tree, [norm]: "" }));
+            setActiveFile(norm);
+            showToast(`Created ${norm}`, "ok");
+          } else if (type === "newInFolder") {
+            const fullPath = folder ? `${folder}/${norm}` : norm;
+            const normalized = normalizeFileName(fullPath);
+            setFileTree(tree => ({ ...tree, [normalized]: "" }));
+            setActiveFile(normalized);
+            showToast(`Created ${normalized}`, "ok");
+          } else if (type === "rename") {
+            setFileTree(tree => {
+              const next = {...tree};
+              const content = next[path];
+              delete next[path];
+              next[norm] = content;
+              return next;
+            });
+            if (activeFile === path) setActiveFile(norm);
+            showToast(`Renamed to ${norm}`, "ok");
+          }
+          setPromptState(s=>({...s,open:false}));
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmState.open}
+        onOpenChange={o=>setConfirmState(s=>({...s,open:o}))}
+        title={confirmState.title}
+        description={confirmState.description}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        onConfirm={()=>{
+          const { path } = confirmState;
+          setFileTree(tree => {
+            const next = {...tree};
+            delete next[path];
+            return Object.keys(next).length ? next : { "welcome.md": SAMPLE };
+          });
+          if (activeFile === path) {
+            const remaining = Object.keys(fileTree).filter(p => p !== path);
+            setActiveFile(remaining[0] || "welcome.md");
+          }
+          showToast(`Deleted ${path}`, "ok");
+          setConfirmState(s=>({...s,open:false}));
+        }}
+      />
     </div>
   );
 }
