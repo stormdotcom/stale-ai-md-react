@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import JSZip from "jszip";
+import * as Y from "yjs";
+import { WebrtcProvider } from "y-webrtc";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAMPLE
@@ -785,10 +787,12 @@ export default function MDViewer() {
   const styleRef = useRef(null);
   const rzDrag  = useRef({ on:false, x0:0, w0:0 });
   const dc      = useRef(0);
-  const sessionChannelRef = useRef(null);
   const clientIdRef = useRef(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : String(Date.now()));
   const isRemoteUpdate = useRef(false);
-  const peersRef = useRef(new Set());
+  const ydocRef = useRef(null);
+  const ytextRef = useRef(null);
+  const webrtcRef = useRef(null);
+  const mdRef = useRef(md);
 
   useEffect(() => {
     if (styleRef.current) return;
@@ -799,36 +803,62 @@ export default function MDViewer() {
   }, []);
 
   useEffect(() => {
-    if (!sessionId || typeof BroadcastChannel === "undefined") return;
-    const chan = new BroadcastChannel(`slateai-md-${sessionId}`);
-    sessionChannelRef.current = chan;
-    peersRef.current.add(clientIdRef.current);
-    setSessionPeers(peersRef.current.size);
+    mdRef.current = md;
+  }, [md]);
 
-    chan.onmessage = ev => {
-      const data = ev.data || {};
-      if (!data || data.from === clientIdRef.current) return;
-      if (data.type === "hello") {
-        peersRef.current.add(data.from);
-        setSessionPeers(peersRef.current.size);
-        chan.postMessage({ type: "ack", from: clientIdRef.current });
-      } else if (data.type === "ack") {
-        peersRef.current.add(data.from);
-        setSessionPeers(peersRef.current.size);
-      } else if (data.type === "doc" && typeof data.md === "string") {
-        isRemoteUpdate.current = true;
-        setHist(h => { const next=[...h,data.md]; setHIdx(next.length-1); return next; });
-        setMd(data.md);
-        isRemoteUpdate.current = false;
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const doc = new Y.Doc();
+    const text = doc.getText("md");
+    if (text.length === 0 && mdRef.current) {
+      text.insert(0, mdRef.current);
+    }
+
+    const room = `slateai-md-${sessionId}`;
+    const provider = new WebrtcProvider(room, doc);
+
+    const updatePeers = () => {
+      try {
+        const states = provider.awareness.getStates();
+        setSessionPeers(states ? states.size : 1);
+      } catch {
+        setSessionPeers(1);
       }
     };
 
-    chan.postMessage({ type: "hello", from: clientIdRef.current });
+    provider.awareness.setLocalStateField("id", clientIdRef.current);
+    updatePeers();
+    provider.awareness.on("change", updatePeers);
+
+    const handleTextChange = () => {
+      if (isRemoteUpdate.current) return;
+      const next = text.toString();
+      if (next === mdRef.current) return;
+      isRemoteUpdate.current = true;
+      setHist((h) => {
+        const nextHist = [...h, next];
+        setHIdx(nextHist.length - 1);
+        return nextHist;
+      });
+      setMd(next);
+      isRemoteUpdate.current = false;
+    };
+
+    text.observe(handleTextChange);
+
+    ydocRef.current = doc;
+    ytextRef.current = text;
+    webrtcRef.current = provider;
 
     return () => {
-      chan.close();
-      if (sessionChannelRef.current === chan) sessionChannelRef.current = null;
-      peersRef.current.clear();
+      text.unobserve(handleTextChange);
+      provider.awareness.off("change", updatePeers);
+      provider.destroy();
+      doc.destroy();
+      if (webrtcRef.current === provider) webrtcRef.current = null;
+      if (ydocRef.current === doc) ydocRef.current = null;
+      if (ytextRef.current === text) ytextRef.current = null;
       setSessionPeers(1);
     };
   }, [sessionId, setHist, setMd, setHIdx]);
@@ -848,8 +878,12 @@ export default function MDViewer() {
   const commit = useCallback(newMd => {
     setHist(h => { const next=[...h.slice(0,hIdx+1),newMd]; setHIdx(next.length-1); return next; });
     setMd(newMd);
-    if (sessionId && sessionChannelRef.current && !isRemoteUpdate.current) {
-      sessionChannelRef.current.postMessage({ type: "doc", md: newMd, from: clientIdRef.current });
+    if (sessionId && ytextRef.current && !isRemoteUpdate.current) {
+      const ytext = ytextRef.current;
+      isRemoteUpdate.current = true;
+      ytext.delete(0, ytext.length);
+      ytext.insert(0, newMd);
+      isRemoteUpdate.current = false;
     }
   }, [hIdx, sessionId]);
   const undo = useCallback(() => { if(hIdx>0){const ni=hIdx-1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
