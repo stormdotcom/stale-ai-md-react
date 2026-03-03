@@ -1215,8 +1215,12 @@ img { max-width: 100%; }
               ↩ Wrap
             </button>
             <div className="vsep"/>
-            <button className="vb" onClick={handleShareSession}>
-              {sessionId ? `Share session` : `Start session`}
+            <button
+              className={`vb${sessionId ? " on" : ""}`}
+              onClick={handleShareSession}
+            >
+              {Ic.link}
+              {sessionId ? "Session active" : "Start session"}
             </button>
             <div style={{flex:1}}/>
             <span className="badge">{words}w</span>
