@@ -362,6 +362,42 @@ textarea.raw::selection{background:var(--sel)}
   }
 }
 
+/* Responsive layout tweaks */
+@media (max-width: 960px){
+  .root{
+    height:calc(100vh - 32px);
+  }
+  .sw{
+    flex-direction:column;
+  }
+  .rz{
+    display:none;
+  }
+  .vtbar{
+    flex-wrap:wrap;
+    row-gap:4px;
+  }
+  .ps{
+    padding:20px 16px 40px;
+  }
+}
+
+@media (max-width: 640px){
+  .filesb{
+    position:absolute;
+    top:32px;
+    bottom:22px;
+    left:0;
+    z-index:30;
+  }
+  .actbar{
+    width:40px;
+  }
+  .fmtbar{
+    overflow-x:auto;
+  }
+}
+
 .aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0}
 .aip-title{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .aip-title-dot{width:6px;height:6px;border-radius:50%;background:var(--purple)}
@@ -476,6 +512,8 @@ const Ic = {
   open:    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1"/><rect x="3" y="13" width="18" height="8" rx="1"/></svg>,
   check:   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
   x:       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  share:   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 11l8-4"/><path d="M8 13l8 4"/></svg>,
+  whatsapp:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 19l-1 4 4-1a9 9 0 1015-7 9 9 0 10-18 0z"/><path d="M9 9c0 3 3 6 6 6 .5 0 1-.1 1.4-.3l1.1.3-.3-1.1c.2-.4.3-.9.3-1.4 0-.3-.1-.5-.4-.7l-1.1-.4a.7.7 0 00-.7.1l-.6.6a.4.4 0 01-.4.1c-1-.3-1.8-1.1-2.1-2.1a.4.4 0 01.1-.4l.6-.6a.7.7 0 00.1-.7L12.7 7a.7.7 0 00-.7-.4H12c-.9 0-1.7.8-1.7 1.7z"/></svg>,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1078,6 +1116,17 @@ img { max-width: 100%; }
     URL.revokeObjectURL(url);
   };
 
+  const normalizeFileName = raw => {
+    if (!raw) return "untitled.md";
+    const trimmed = raw.trim();
+    const parts = trimmed.split("/").filter(Boolean);
+    let base = parts.pop() || "untitled";
+    base = base.replace(/\s+/g, "-").toLowerCase();
+    if (!base.endsWith(".md")) base += ".md";
+    const folder = parts.map(p => p.replace(/\s+/g, "-").toLowerCase()).join("/");
+    return folder ? `${folder}/${base}` : base;
+  };
+
   // ── Sidebar
   const toggleSB = mode => setSidebar(s=>s===mode?"closed":mode);
 
@@ -1122,6 +1171,17 @@ img { max-width: 100%; }
     }
   };
 
+  const handleWhatsAppShare = () => {
+    if (!sessionId || typeof window === "undefined") {
+      showToast("Start a session first to share", "err");
+      return;
+    }
+    const url = window.location.href;
+    const text = encodeURIComponent(`Join my SlateAI Markdown Studio session: ${url}`);
+    const waUrl = `https://wa.me/?text=${text}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="flex flex-col h-screen"
       onDragEnter={onDE} onDragLeave={onDL} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
@@ -1145,7 +1205,32 @@ img { max-width: 100%; }
         <div className="filesb" style={{width:sbOpen?220:0,borderRight:sbOpen?undefined:"none"}}>
           <div className="sb-hd">{sidebar==="outline"?"Outline":"Open Files"}</div>
           <div className="sb-sc">
-            {sidebar==="files" && <div className="fe on"><span style={{fontSize:13}}>📄</span>{fileName}</div>}
+            {sidebar==="files" && (
+              <div
+                className="fe on"
+                onContextMenu={e => {
+                  e.preventDefault();
+                  const choice = (window.prompt("File actions: (n) new .md, (f) move into folder, (r) rename", "n/r/f") || "").toLowerCase();
+                  if (choice.startsWith("n")) {
+                    const name = window.prompt("New file name", "untitled.md") || "untitled.md";
+                    const norm = normalizeFileName(name);
+                    setFileName(norm);
+                    commit("");
+                  } else if (choice.startsWith("f")) {
+                    const folder = window.prompt("Folder name", "notes") || "notes";
+                    const base = fileName.split("/").pop() || "untitled.md";
+                    const norm = normalizeFileName(`${folder}/${base}`);
+                    setFileName(norm);
+                  } else if (choice.startsWith("r")) {
+                    const name = window.prompt("Rename file", fileName) || fileName;
+                    const norm = normalizeFileName(name);
+                    setFileName(norm);
+                  }
+                }}
+              >
+                <span style={{fontSize:13}}>📄</span>{fileName}
+              </div>
+            )}
             {sidebar==="outline" && (outline.length
               ? outline.map((o,i)=>(
                   <div key={i} className={`oi h${o.level}`} onClick={()=>jumpTo(o.text)}>
@@ -1219,9 +1304,14 @@ img { max-width: 100%; }
               className={`vb${sessionId ? " on" : ""}`}
               onClick={handleShareSession}
             >
-              {Ic.link}
-              {sessionId ? "Session active" : "Start session"}
+              {Ic.share}
+              {sessionId ? "Copy link" : "Start session"}
             </button>
+            {sessionId && (
+              <button className="vb" onClick={handleWhatsAppShare}>
+                {Ic.whatsapp} WhatsApp
+              </button>
+            )}
             <div style={{flex:1}}/>
             <span className="badge">{words}w</span>
             <span className="badge" style={{marginLeft:4}}>{lines}L</span>
