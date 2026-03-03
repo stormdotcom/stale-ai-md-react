@@ -1008,7 +1008,21 @@ export default function MDViewer() {
       }
 
       const room = `slateai-md-${sessionId}`;
-      provider = new WebrtcProvider(room, doc);
+      provider = new WebrtcProvider(room, doc, {
+        signaling: [
+          "wss://y-webrtc-eu.fly.dev",
+          "wss://signaling.yjs.dev",
+        ],
+        peerOpts: {
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+              { urls: "stun:stun2.l.google.com:19302" },
+            ],
+          },
+        },
+      });
 
     const updatePeers = () => {
       try {
@@ -1123,24 +1137,62 @@ export default function MDViewer() {
     requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(res.ns,res.ne); });
   }, [commit]);
 
-  // ── Keyboard shortcuts
+  // ── Keyboard shortcuts (editor-focused or global)
+  const isEditorFocused = () => document.activeElement === taRef.current;
+  const isInputFocused = () => {
+    const el = document.activeElement;
+    return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA") && el !== taRef.current;
+  };
+
   useEffect(() => {
     const h = e => {
-      if (!(e.ctrlKey||e.metaKey)) return;
-      if (e.key==="b") { e.preventDefault(); applyFmt("bold"); }
-      if (e.key==="i") { e.preventDefault(); applyFmt("italic"); }
-      if (e.key==="k") { e.preventDefault(); applyFmt("link"); }
-      if (e.key==="z"&&!e.shiftKey) { e.preventDefault(); undo(); }
-      if (e.key==="z"&&e.shiftKey)  { e.preventDefault(); redo(); }
-      if (e.key==="y") { e.preventDefault(); redo(); }
-      if (e.key === "f") {
+      const mod = e.ctrlKey || e.metaKey;
+      const inEditor = isEditorFocused();
+      const inInput = isInputFocused();
+
+      // Ctrl+S: Save as .md (global)
+      if (mod && e.key === "s") {
+        e.preventDefault();
+        downloadFile("md");
+        showToast("Saved as .md", "ok");
+        return;
+      }
+      // Ctrl+Shift+S: Save as .html (global)
+      if (mod && e.shiftKey && e.key === "s") {
+        e.preventDefault();
+        downloadFile("html");
+        showToast("Saved as .html", "ok");
+        return;
+      }
+      // Ctrl+F: Search (global)
+      if (mod && e.key === "f") {
         e.preventDefault();
         setShowSearch(s => !s);
+        return;
+      }
+      // Ctrl+O: Open file (global)
+      if (mod && e.key === "o") {
+        e.preventDefault();
+        fileRef.current?.click();
+        return;
+      }
+
+      // Editor-only shortcuts (skip when in dialog input)
+      if (inInput) return;
+      if (!mod && e.key !== "Tab") return;
+
+      if (mod) {
+        if (e.key === "b") { e.preventDefault(); applyFmt("bold"); return; }
+        if (e.key === "i") { e.preventDefault(); applyFmt("italic"); return; }
+        if (e.key === "k") { e.preventDefault(); applyFmt("link"); return; }
+        if (e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+        if (e.key === "z" && e.shiftKey) { e.preventDefault(); redo(); return; }
+        if (e.key === "y") { e.preventDefault(); redo(); return; }
       }
     };
-    window.addEventListener("keydown",h);
-    return ()=>window.removeEventListener("keydown",h);
-  }, [applyFmt,undo,redo]);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [applyFmt, undo, redo, downloadFile]);
 
   // ── Track cursor + selection
   const trackCursor = () => {
@@ -1564,7 +1616,7 @@ img{max-width:100%}`;
 
           {/* View toolbar */}
           <div className="vtbar">
-            <button className="vb" onClick={()=>fileRef.current.click()} title="Open file (.md, .txt)">{Ic.open} Open</button>
+            <button className="vb" onClick={()=>fileRef.current.click()} title="Open file (.md, .txt) — Ctrl+O">{Ic.open} Open</button>
             <button className="vb" onClick={()=>folderRef.current?.click()} title="Import folder (.md files)">{Ic.folder} Import folder</button>
             <div className="vsep"/>
             <button className={`vb${view==="split"?" on":""}`}   onClick={()=>setView("split")} title="Split view: editor and preview side by side">⊟ Split</button>
@@ -1574,8 +1626,8 @@ img{max-width:100%}`;
             <button className="vb" onClick={()=>copyOut("md")} title={copied==="md"?"Copied!":"Copy Markdown to clipboard"}>{copied==="md"?"✓ Copied":"⎘ MD"}</button>
             <button className="vb" onClick={()=>copyOut("html")} title={copied==="html"?"Copied!":"Copy HTML to clipboard"}>{copied==="html"?"✓ Done":"⎘ HTML"}</button>
             <div className="vsep"/>
-            <button className="vb" onClick={()=>downloadFile("md")} title="Save as Markdown file">↓ Save .md</button>
-            <button className="vb" onClick={()=>downloadFile("html")} title="Save as HTML file">↓ Save .html</button>
+            <button className="vb" onClick={()=>downloadFile("md")} title="Save as Markdown file — Ctrl+S">↓ Save .md</button>
+            <button className="vb" onClick={()=>downloadFile("html")} title="Save as HTML file — Ctrl+Shift+S">↓ Save .html</button>
             <button className="vb" onClick={()=>downloadFile("zip")} title="Export current file as .zip (.md + .html)">↓ Zip</button>
             <button className="vb" onClick={()=>downloadFile("zip-all")} title="Export all files as .zip (.md + .html each)">↓ Export all</button>
             <div className="vsep"/>
