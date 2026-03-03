@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import JSZip from "jszip";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAMPLE
@@ -234,11 +235,8 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 ::-webkit-scrollbar-thumb:hover{background:#484f58}
 
 /* titlebar */
-.titlebar{height:32px;background:var(--s1);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;user-select:none;position:relative;z-index:10}
-.tls{display:flex;gap:7px}
-.tl{width:12px;height:12px;border-radius:50%}
-.tl-r{background:#ff5f57}.tl-y{background:#febc2e}.tl-g{background:#28c840}
-.tc{position:absolute;left:50%;transform:translateX(-50%);font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:6px;pointer-events:none}
+.titlebar{height:32px;background:var(--s1);border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;padding:0 14px;gap:10px;flex-shrink:0;user-select:none;position:relative;z-index:10}
+.tc{font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:6px;pointer-events:none}
 .gem{width:14px;height:14px;background:linear-gradient(135deg,var(--acc) 40%,var(--purple));border-radius:3px;flex-shrink:0}
 
 /* root layout */
@@ -350,6 +348,17 @@ textarea.raw::selection{background:var(--sel)}
 /* ── AI PANEL ── */
 .aipanel{width:300px;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s ease}
 .aipanel.closed{width:0;border:none}
+
+@media (max-width: 960px){
+  .aipanel{
+    position:absolute;
+    right:0;
+    top:32px;
+    bottom:22px;
+    z-index:40;
+    box-shadow:0 0 0 1px var(--bd);
+  }
+}
 
 .aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0}
 .aip-title{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
@@ -762,6 +771,12 @@ export default function MDViewer() {
   const [searchText, setSearchText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [wordWrap, setWordWrap] = useState(false);
+  const [sessionId, setSessionId] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const m = window.location.hash.match(/session=([^&]+)/);
+    return m ? m[1] : null;
+  });
+  const [sessionPeers, setSessionPeers] = useState(1);
 
   const taRef   = useRef(null);
   const gutRef  = useRef(null);
@@ -770,6 +785,10 @@ export default function MDViewer() {
   const styleRef = useRef(null);
   const rzDrag  = useRef({ on:false, x0:0, w0:0 });
   const dc      = useRef(0);
+  const sessionChannelRef = useRef(null);
+  const clientIdRef = useRef(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : String(Date.now()));
+  const isRemoteUpdate = useRef(false);
+  const peersRef = useRef(new Set());
 
   useEffect(() => {
     if (styleRef.current) return;
@@ -778,6 +797,41 @@ export default function MDViewer() {
     document.head.appendChild(el);
     styleRef.current = el;
   }, []);
+
+  useEffect(() => {
+    if (!sessionId || typeof BroadcastChannel === "undefined") return;
+    const chan = new BroadcastChannel(`slateai-md-${sessionId}`);
+    sessionChannelRef.current = chan;
+    peersRef.current.add(clientIdRef.current);
+    setSessionPeers(peersRef.current.size);
+
+    chan.onmessage = ev => {
+      const data = ev.data || {};
+      if (!data || data.from === clientIdRef.current) return;
+      if (data.type === "hello") {
+        peersRef.current.add(data.from);
+        setSessionPeers(peersRef.current.size);
+        chan.postMessage({ type: "ack", from: clientIdRef.current });
+      } else if (data.type === "ack") {
+        peersRef.current.add(data.from);
+        setSessionPeers(peersRef.current.size);
+      } else if (data.type === "doc" && typeof data.md === "string") {
+        isRemoteUpdate.current = true;
+        setHist(h => { const next=[...h,data.md]; setHIdx(next.length-1); return next; });
+        setMd(data.md);
+        isRemoteUpdate.current = false;
+      }
+    };
+
+    chan.postMessage({ type: "hello", from: clientIdRef.current });
+
+    return () => {
+      chan.close();
+      if (sessionChannelRef.current === chan) sessionChannelRef.current = null;
+      peersRef.current.clear();
+      setSessionPeers(1);
+    };
+  }, [sessionId, setHist, setMd, setHIdx]);
 
   useEffect(() => {
     prevRef.current?.querySelectorAll(".cc").forEach(btn => {
@@ -794,7 +848,10 @@ export default function MDViewer() {
   const commit = useCallback(newMd => {
     setHist(h => { const next=[...h.slice(0,hIdx+1),newMd]; setHIdx(next.length-1); return next; });
     setMd(newMd);
-  }, [hIdx]);
+    if (sessionId && sessionChannelRef.current && !isRemoteUpdate.current) {
+      sessionChannelRef.current.postMessage({ type: "doc", md: newMd, from: clientIdRef.current });
+    }
+  }, [hIdx, sessionId]);
   const undo = useCallback(() => { if(hIdx>0){const ni=hIdx-1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
   const redo = useCallback(() => { if(hIdx<hist.length-1){const ni=hIdx+1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
 
@@ -946,6 +1003,34 @@ img { max-width: 100%; }
       content = fullHtml;
       mimeType = "text/html";
       extension = ".html";
+    } else if (type === "zip") {
+      const base = fileName.replace(/\.[^.]+$/, "") || "document";
+      const zip = new JSZip();
+      const folder = zip.folder(base);
+      if (folder) {
+        folder.file(`${base}.md`, md);
+        const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${fileName}</title>
+</head>
+<body>${htmlOut}</body>
+</html>`;
+        folder.file(`${base}.html`, fullHtml);
+      }
+      zip.generateAsync({ type: "blob" }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${base}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+      return;
     }
     if (!content) return;
     const blob = new Blob([content], { type: mimeType });
@@ -984,13 +1069,31 @@ img { max-width: 100%; }
                 : { width: editorW ? `${editorW}px` : "50%", display:"flex" };
   const ppStyle = view==="edit" ? { display:"none" } : { flex:1, display:"flex" };
 
+  const handleShareSession = () => {
+    if (typeof window === "undefined") return;
+    let id = sessionId;
+    if (!id) {
+      id = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : String(Date.now()));
+      setSessionId(id);
+      const url = new URL(window.location.href);
+      url.hash = `session=${id}`;
+      window.history.replaceState({}, "", url.toString());
+    }
+    const shareUrl = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl);
+      showToast("Session link copied to clipboard", "ok");
+    } else {
+      showToast("Session active – copy URL to share", "ok");
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen"
       onDragEnter={onDE} onDragLeave={onDL} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
 
       {/* Title bar */}
       <div className="titlebar">
-        <div className="tls"><div className="tl tl-r"/><div className="tl tl-y"/><div className="tl tl-g"/></div>
         <div className="tc"><div className="gem"/><span>{fileName} — MD Viewer</span></div>
       </div>
 
@@ -1076,6 +1179,10 @@ img { max-width: 100%; }
             <div className="vsep"/>
             <button className={`vb${wordWrap ? " on" : ""}`} onClick={()=>setWordWrap(w=>!w)}>
               ↩ Wrap
+            </button>
+            <div className="vsep"/>
+            <button className="vb" onClick={handleShareSession}>
+              {sessionId ? `Share session` : `Start session`}
             </button>
             <div style={{flex:1}}/>
             <span className="badge">{words}w</span>
@@ -1202,6 +1309,14 @@ img { max-width: 100%; }
         <div className="sd"/>
         <div className="si">{fileName}</div>
         <div className="sg"/>
+        {sessionId && (
+          <>
+            <div className="sd"/>
+            <div className="si" style={{ fontSize:10 }}>
+              Session {sessionId} · {sessionPeers} tab{sessionPeers!==1?"s":""}
+            </div>
+          </>
+        )}
         {selection && <div className="si" style={{color:"rgba(255,255,255,.7)",fontSize:10}}>"{selection.slice(0,30)}{selection.length>30?"…":""}" selected</div>}
         {selection && <div className="sd"/>}
         <div className="si" style={{gap:5}}>
