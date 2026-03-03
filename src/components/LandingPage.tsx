@@ -72,15 +72,7 @@ const faqs = [
   {
     q: "Where are my markdown files saved?",
     a: "Files you create in the left sidebar are stored in localStorage as a small virtual file tree. You can also drag in existing .md files and export them as .md, .html, or a ZIP bundle at any time.",
-  },
-  {
-    q: "Does multi-user editing require a backend?",
-    a: "No. Collaboration uses Yjs with a WebRTC provider so browsers sync changes peer-to-peer. It is designed for light, ad-hoc collaboration sessions without running your own server.",
-  },
-  {
-    q: "Is this production-ready or just a demo?",
-    a: "The app is open-source and built like a real dev tool: TypeScript, React 19, Vite, Tailwind, and a custom markdown engine. You can fork it, extend it, or embed the editor in your own products.",
-  },
+  }
 ];
 
 function FeatureIcon({ path }: { path: string }) {

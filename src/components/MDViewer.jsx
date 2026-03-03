@@ -239,11 +239,6 @@ const CSS = `
   --sel:#1c3a5e;
 }
 body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:#484f58}
-
 /* titlebar */
 .titlebar{height:32px;background:var(--s1);border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;padding:0 14px;gap:10px;flex-shrink:0;user-select:none;position:relative;z-index:10}
 .tc{font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:6px;pointer-events:none}
@@ -309,8 +304,9 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .fsel:hover{border-color:var(--acc);color:var(--text)}
 
 /* view toolbar */
-.vtbar{height:30px;background:var(--bg);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 8px;gap:2px;flex-shrink:0}
-.vb{padding:3px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;background:transparent;color:var(--dim);border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s}
+.vtbar{height:30px;background:var(--bg);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 8px;gap:2px;flex-shrink:0;overflow-x:auto;overflow-y:hidden}
+.vtbar::-webkit-scrollbar{height:4px}
+.vb{padding:3px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;background:transparent;color:var(--dim);border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s;white-space:nowrap;flex-shrink:0}
 .vb:hover{background:var(--s3);color:var(--text)}
 .vb.on{background:var(--s3);color:var(--acc)}
 .vsep{width:1px;height:14px;background:var(--bd);margin:0 4px;flex-shrink:0}
@@ -401,8 +397,7 @@ textarea.raw::selection{background:var(--sel)}
     display:none;
   }
   .vtbar{
-    flex-wrap:wrap;
-    row-gap:4px;
+    min-height:30px;
   }
   .ps{
     padding:20px 16px 40px;
@@ -1420,11 +1415,11 @@ img{max-width:100%}`;
       <div className="root">
         {/* Activity bar */}
         <div className="actbar">
-          <button className={`ab${sidebar==="files"?" on":""}`} onClick={()=>toggleSB("files")} title="Files">{Ic.folder}</button>
-          <button className={`ab${sidebar==="outline"?" on":""}`} onClick={()=>toggleSB("outline")} title="Outline">{Ic.lines}</button>
-          <button className={`ab${aiOpen?" on":""}`} onClick={()=>setAiOpen(o=>!o)} title="AI Assistant"
+          <button className={`ab${sidebar==="files"?" on":""}`} onClick={()=>toggleSB("files")} title="File explorer">{Ic.folder}</button>
+          <button className={`ab${sidebar==="outline"?" on":""}`} onClick={()=>toggleSB("outline")} title="Document outline">{Ic.lines}</button>
+          <button className={`ab${aiOpen?" on":""}`} onClick={()=>setAiOpen(o=>!o)} title="AI Assistant (rewrite, improve, format)"
             style={aiOpen?{color:"var(--purple)"}:{}}>{Ic.sparkle}</button>
-          <button className="ab bot" title="Settings">{Ic.cog}</button>
+          <button className="ab bot" title="Settings (coming soon)">{Ic.cog}</button>
         </div>
 
         {/* File sidebar */}
@@ -1435,8 +1430,8 @@ img{max-width:100%}`;
               <div className="sb-hd-actions">
                 <button className="sb-btn" onClick={()=>setPromptState({
                   open: true, title: "New file", defaultValue: "untitled.md", type: "new", path: "", folder: ""
-                })} title="New file">{Ic.plus}</button>
-                <button className="sb-btn" onClick={()=>folderRef.current?.click()} title="Import folder">{Ic.folder}</button>
+                })} title="Create new file">{Ic.plus}</button>
+                <button className="sb-btn" onClick={()=>folderRef.current?.click()} title="Import folder (.md files)">{Ic.folder}</button>
               </div>
             )}
           </div>
@@ -1460,10 +1455,10 @@ img{max-width:100%}`;
                           <span style={{fontSize:13}}>📄</span>
                           <span className="fe-name" style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{label}</span>
                           <div className="fe-actions" onClick={e=>e.stopPropagation()}>
-                            <button type="button" className="fe-act" title="Rename" onClick={()=>setPromptState({
+                            <button type="button" className="fe-act" title="Rename file" onClick={()=>setPromptState({
                               open: true, title: "Rename file", defaultValue: path, type: "rename", path, folder
                             })}>{Ic.pencil}</button>
-                            <button type="button" className="fe-act del" title="Remove" onClick={()=>setConfirmState({
+                            <button type="button" className="fe-act del" title="Delete file" onClick={()=>setConfirmState({
                               open: true, title: "Delete file", description: `Are you sure you want to delete ${path}?`, path
                             })}>{Ic.trash}</button>
                           </div>
@@ -1508,76 +1503,77 @@ img{max-width:100%}`;
             <button className="tab on">
               <div className="tdot"/>
               <span>{fileName}</span>
-              <span className="tx" onClick={()=>{commit("");setFileName("untitled.md");}}>×</span>
+              <span className="tx" onClick={()=>{commit("");setFileName("untitled.md");}} title="Close tab">×</span>
             </button>
           </div>
 
           {/* Formatting bar */}
           <div className="fmtbar">
-            <button className="fb" data-tip="Undo ⌘Z" onClick={undo} disabled={!canUndo}>{Ic.undo}</button>
-            <button className="fb" data-tip="Redo ⌘⇧Z" onClick={redo} disabled={!canRedo}>{Ic.redo}</button>
+            <button className="fb" data-tip="Undo ⌘Z" title="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}>{Ic.undo}</button>
+            <button className="fb" data-tip="Redo ⌘⇧Z" title="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo}>{Ic.redo}</button>
             <div className="fsep"/>
-            <select className="fsel" value="" onChange={e=>{applyFmt(`h${e.target.value}`);}}>
+            <select className="fsel" value="" onChange={e=>{applyFmt(`h${e.target.value}`);}} title="Heading level (H1–H3)">
               <option value="" disabled>Heading</option>
               <option value="1">H1</option><option value="2">H2</option><option value="3">H3</option>
             </select>
             <div className="fsep"/>
-            <button className="fb" data-tip="Bold ⌘B" onClick={()=>applyFmt("bold")}><strong>B</strong></button>
-            <button className="fb" data-tip="Italic ⌘I" onClick={()=>applyFmt("italic")} style={{fontStyle:"italic",fontFamily:"'Fraunces',serif",fontSize:14}}>I</button>
-            <button className="fb" data-tip="Strikethrough" onClick={()=>applyFmt("strike")} style={{textDecoration:"line-through"}}>S</button>
-            <button className="fb" data-tip="Inline code" onClick={()=>applyFmt("inlinecode")} style={{fontFamily:"monospace",fontSize:13}}>`</button>
+            <button className="fb" data-tip="Bold ⌘B" title="Bold (Ctrl+B)" onClick={()=>applyFmt("bold")}><strong>B</strong></button>
+            <button className="fb" data-tip="Italic ⌘I" title="Italic (Ctrl+I)" onClick={()=>applyFmt("italic")} style={{fontStyle:"italic",fontFamily:"'Fraunces',serif",fontSize:14}}>I</button>
+            <button className="fb" data-tip="Strikethrough" title="Strikethrough" onClick={()=>applyFmt("strike")} style={{textDecoration:"line-through"}}>S</button>
+            <button className="fb" data-tip="Inline code" title="Inline code" onClick={()=>applyFmt("inlinecode")} style={{fontFamily:"monospace",fontSize:13}}>`</button>
             <div className="fsep"/>
-            <button className="fb" data-tip="Bullet list" onClick={()=>applyFmt("ul")}>
+            <button className="fb" data-tip="Bullet list" title="Bullet list" onClick={()=>applyFmt("ul")}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
             </button>
-            <button className="fb" data-tip="Numbered list" onClick={()=>applyFmt("ol")}>
+            <button className="fb" data-tip="Numbered list" title="Numbered list" onClick={()=>applyFmt("ol")}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" strokeLinecap="round"/></svg>
             </button>
-            <button className="fb" data-tip="Blockquote" onClick={()=>applyFmt("quote")} style={{fontSize:17,paddingBottom:2}}>"</button>
-            <button className="fb" data-tip="Code block" onClick={()=>applyFmt("codeblock")} style={{fontFamily:"monospace",fontSize:11}}>{"</>"}</button>
+            <button className="fb" data-tip="Blockquote" title="Blockquote" onClick={()=>applyFmt("quote")} style={{fontSize:17,paddingBottom:2}}>"</button>
+            <button className="fb" data-tip="Code block" title="Code block" onClick={()=>applyFmt("codeblock")} style={{fontFamily:"monospace",fontSize:11}}>{"</>"}</button>
             <div className="fsep"/>
-            <button className="fb" data-tip="Link ⌘K" onClick={()=>applyFmt("link")}>{Ic.link}</button>
-            <button className="fb" data-tip="Image" onClick={()=>applyFmt("img")}>{Ic.img}</button>
-            <button className="fb" data-tip="Table" onClick={()=>applyFmt("table")}>{Ic.tbl}</button>
-            <button className="fb" data-tip="HR" onClick={()=>applyFmt("hr")}>{Ic.hr}</button>
+            <button className="fb" data-tip="Link ⌘K" title="Insert link (Ctrl+K)" onClick={()=>applyFmt("link")}>{Ic.link}</button>
+            <button className="fb" data-tip="Image" title="Insert image" onClick={()=>applyFmt("img")}>{Ic.img}</button>
+            <button className="fb" data-tip="Table" title="Insert table" onClick={()=>applyFmt("table")}>{Ic.tbl}</button>
+            <button className="fb" data-tip="HR" title="Horizontal rule" onClick={()=>applyFmt("hr")}>{Ic.hr}</button>
           </div>
 
           {/* View toolbar */}
           <div className="vtbar">
-            <button className="vb" onClick={()=>fileRef.current.click()}>{Ic.open} Open</button>
+            <button className="vb" onClick={()=>fileRef.current.click()} title="Open file (.md, .txt)">{Ic.open} Open</button>
             <button className="vb" onClick={()=>folderRef.current?.click()} title="Import folder (.md files)">{Ic.folder} Import folder</button>
             <div className="vsep"/>
-            <button className={`vb${view==="split"?" on":""}`}   onClick={()=>setView("split")}>⊟ Split</button>
-            <button className={`vb${view==="preview"?" on":""}`} onClick={()=>setView("preview")}>{Ic.eye} Preview</button>
-            <button className={`vb${view==="edit"?" on":""}`}    onClick={()=>setView("edit")}>{Ic.pencil} Edit</button>
+            <button className={`vb${view==="split"?" on":""}`}   onClick={()=>setView("split")} title="Split view: editor and preview side by side">⊟ Split</button>
+            <button className={`vb${view==="preview"?" on":""}`} onClick={()=>setView("preview")} title="Preview only">{Ic.eye} Preview</button>
+            <button className={`vb${view==="edit"?" on":""}`}    onClick={()=>setView("edit")} title="Edit only">{Ic.pencil} Edit</button>
             <div className="vsep"/>
-            <button className="vb" onClick={()=>copyOut("md")}>{copied==="md"?"✓ Copied":"⎘ MD"}</button>
-            <button className="vb" onClick={()=>copyOut("html")}>{copied==="html"?"✓ Done":"⎘ HTML"}</button>
+            <button className="vb" onClick={()=>copyOut("md")} title={copied==="md"?"Copied!":"Copy Markdown to clipboard"}>{copied==="md"?"✓ Copied":"⎘ MD"}</button>
+            <button className="vb" onClick={()=>copyOut("html")} title={copied==="html"?"Copied!":"Copy HTML to clipboard"}>{copied==="html"?"✓ Done":"⎘ HTML"}</button>
             <div className="vsep"/>
-            <button className="vb" onClick={()=>downloadFile("md")}>↓ Save .md</button>
-            <button className="vb" onClick={()=>downloadFile("html")}>↓ Save .html</button>
-            <button className="vb" onClick={()=>downloadFile("zip")} title="Current file as .md + .html">↓ Zip</button>
-            <button className="vb" onClick={()=>downloadFile("zip-all")} title="All files as .md + .html">↓ Export all</button>
+            <button className="vb" onClick={()=>downloadFile("md")} title="Save as Markdown file">↓ Save .md</button>
+            <button className="vb" onClick={()=>downloadFile("html")} title="Save as HTML file">↓ Save .html</button>
+            <button className="vb" onClick={()=>downloadFile("zip")} title="Export current file as .zip (.md + .html)">↓ Zip</button>
+            <button className="vb" onClick={()=>downloadFile("zip-all")} title="Export all files as .zip (.md + .html each)">↓ Export all</button>
             <div className="vsep"/>
-            <button className={`vb${wordWrap ? " on" : ""}`} onClick={()=>setWordWrap(w=>!w)}>
+            <button className={`vb${wordWrap ? " on" : ""}`} onClick={()=>setWordWrap(w=>!w)} title="Toggle word wrap">
               ↩ Wrap
             </button>
             <div className="vsep"/>
             <button
               className={`vb${sessionId ? " on" : ""}`}
               onClick={handleShareSession}
+              title={sessionId ? "Copy session link to share" : "Start real-time collaboration session"}
             >
               {Ic.share}
               {sessionId ? "Copy link" : "Start session"}
             </button>
             {sessionId && (
-              <button className="vb" onClick={handleWhatsAppShare}>
+              <button className="vb" onClick={handleWhatsAppShare} title="Share session via WhatsApp">
                 {Ic.whatsapp} WhatsApp
               </button>
             )}
             <div style={{flex:1}}/>
-            <span className="badge">{words}w</span>
-            <span className="badge" style={{marginLeft:4}}>{lines}L</span>
+            <span className="badge" title="Word count">{words}w</span>
+            <span className="badge" style={{marginLeft:4}} title="Line count">{lines}L</span>
           </div>
 
           {/* Editor area */}
@@ -1632,6 +1628,7 @@ img{max-width:100%}`;
                 />
                 <button
                   className="fb"
+                  title="Replace all occurrences"
                   onClick={()=>{
                     if (!searchText) return;
                     commit(md.replaceAll(searchText, replaceText));
@@ -1640,7 +1637,7 @@ img{max-width:100%}`;
                 >
                   Replace All
                 </button>
-                <button className="fb" onClick={()=>setShowSearch(false)}>✕</button>
+                <button className="fb" title="Close search" onClick={()=>setShowSearch(false)}>✕</button>
               </div>
             )}
             {md==="" ? (
@@ -1648,7 +1645,7 @@ img{max-width:100%}`;
                 <div className="dzring">{Ic.upload}</div>
                 <div className="dztitle">Open a Markdown file</div>
                 <div className="dzsub">Drag & drop .md or click below</div>
-                <button className="dzbtn" onClick={()=>fileRef.current.click()}>Choose File</button>
+                <button className="dzbtn" onClick={()=>fileRef.current.click()} title="Open .md or .txt file">Choose File</button>
               </div>
             ) : (
               <div className="sw">
@@ -1711,14 +1708,14 @@ img{max-width:100%}`;
         {selection && <div className="si" style={{color:"rgba(255,255,255,.7)",fontSize:10}}>"{selection.slice(0,30)}{selection.length>30?"…":""}" selected</div>}
         {selection && <div className="sd"/>}
         <div className="si" style={{gap:5}}>
-          <span style={{opacity:canUndo?.9:.35,cursor:canUndo?"pointer":"default"}} onClick={undo}>{Ic.undo}</span>
-          <span style={{opacity:canRedo?.9:.35,cursor:canRedo?"pointer":"default"}} onClick={redo}>{Ic.redo}</span>
+          <span style={{opacity:canUndo?.9:.35,cursor:canUndo?"pointer":"default"}} onClick={undo} title="Undo">{Ic.undo}</span>
+          <span style={{opacity:canRedo?.9:.35,cursor:canRedo?"pointer":"default"}} onClick={redo} title="Redo">{Ic.redo}</span>
         </div>
         <div className="sd"/>
         <div className="si">Ln {cursor.ln}, Col {cursor.col}</div>
         <div className="sd"/>
         <div className="si">
-          <div className="ai-indicator">
+          <div className="ai-indicator" title="AI Assistant available">
             <div className="ai-dot" style={{animationPlayState:aiOpen?"running":"paused",opacity:aiOpen?1:.4}}/>
             AI
           </div>
