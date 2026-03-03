@@ -1009,10 +1009,7 @@ export default function MDViewer() {
 
       const room = `slateai-md-${sessionId}`;
       provider = new WebrtcProvider(room, doc, {
-        signaling: [
-          "wss://y-webrtc-eu.fly.dev",
-          "wss://signaling.yjs.dev",
-        ],
+        signaling: ["wss://y-webrtc-eu.fly.dev"],
         peerOpts: {
           config: {
             iceServers: [
@@ -1036,6 +1033,13 @@ export default function MDViewer() {
     provider.awareness.setLocalStateField("id", clientIdRef.current);
     updatePeers();
     provider.awareness.on("change", updatePeers);
+
+    const onSynced = ({ synced }) => {
+      if (synced && !cancelled && provider.awareness.getStates().size > 1) {
+        showToast("Real-time sync connected", "ok");
+      }
+    };
+    provider.on("synced", onSynced);
 
     const handleTextChange = () => {
       if (isRemoteUpdate.current) return;
@@ -1064,6 +1068,7 @@ export default function MDViewer() {
       cancelled = true;
       if (text) text.unobserve(handleTextChange);
       if (provider) {
+        provider.off("synced", onSynced);
         provider.awareness.off("change", updatePeers);
         provider.destroy();
       }
@@ -1136,6 +1141,113 @@ export default function MDViewer() {
     commit(res.val);
     requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(res.ns,res.ne); });
   }, [commit]);
+
+  // ── Download / export (must be before useEffect that uses it)
+  const downloadFile = useCallback(async (type) => {
+    let content, mimeType, extension;
+    const html = parseMarkdown(md);
+    if (type === "md") {
+      content = md;
+      mimeType = "text/markdown";
+      extension = ".md";
+    } else if (type === "html") {
+      const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${fileName}</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.8; color: #222; }
+pre { background: #f5f5f5; padding: 16px; border-radius: 6px; overflow-x: auto; }
+code { font-family: monospace; font-size: 0.9em; }
+blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding: 0.5em 1em; color: #555; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background: #f5f5f5; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>${html}</body>
+</html>`;
+      content = fullHtml;
+      mimeType = "text/html";
+      extension = ".html";
+    } else if (type === "zip") {
+      const { default: JSZip } = await import("jszip");
+      const base = fileName.replace(/\.[^.]+$/, "") || "document";
+      const zip = new JSZip();
+      const folder = zip.folder(base);
+      if (folder) {
+        folder.file(`${base}.md`, md);
+        const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${fileName}</title>
+</head>
+<body>${html}</body>
+</html>`;
+        folder.file(`${base}.html`, fullHtml);
+      }
+      zip.generateAsync({ type: "blob" }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${base}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+      return;
+    } else if (type === "zip-all") {
+      const entries = Object.entries(fileTree).filter(([p]) => !p.endsWith("/"));
+      if (entries.length === 0) {
+        showToast("No files to export", "err");
+        return;
+      }
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      const htmlStyle = `body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}
+pre{background:#f5f5f5;padding:16px;border-radius:6px;overflow-x:auto}
+code{font-family:monospace;font-size:.9em}
+blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.5em 1em;color:#555}
+table{border-collapse:collapse;width:100%;margin:1em 0}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f5f5f5}
+img{max-width:100%}`;
+      entries.forEach(([path, fileContent]) => {
+        const base = path.replace(/\.[^.]+$/, "") || "document";
+        zip.file(`${base}.md`, fileContent);
+        const fileHtml = parseMarkdown(fileContent);
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${path}</title><style>${htmlStyle}</style></head><body>${fileHtml}</body></html>`;
+        zip.file(`${base}.html`, fullHtml);
+      });
+      const zipName = "markdown-studio-export.zip";
+      zip.generateAsync({ type: "blob" }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = zipName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${entries.length} files as zip`, "ok");
+      });
+      return;
+    }
+    if (!content) return;
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = activeFile.replace(/\.[^.]+$/, "") + extension;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [md, fileName, fileTree, activeFile, showToast]);
 
   // ── Keyboard shortcuts (editor-focused or global)
   const isEditorFocused = () => document.activeElement === taRef.current;
@@ -1307,111 +1419,6 @@ export default function MDViewer() {
   const copyOut = type => {
     const txt = type==="md" ? md : (prevRef.current?.innerHTML ?? "");
     navigator.clipboard.writeText(txt).then(()=>{ setCopied(type); setTimeout(()=>setCopied(null),1400); });
-  };
-
-  const downloadFile = async type => {
-    let content, mimeType, extension;
-    if (type === "md") {
-      content = md;
-      mimeType = "text/markdown";
-      extension = ".md";
-    } else if (type === "html") {
-      const fullHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${fileName}</title>
-<style>
-body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.8; color: #222; }
-pre { background: #f5f5f5; padding: 16px; border-radius: 6px; overflow-x: auto; }
-code { font-family: monospace; font-size: 0.9em; }
-blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding: 0.5em 1em; color: #555; }
-table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-th { background: #f5f5f5; }
-img { max-width: 100%; }
-</style>
-</head>
-<body>${htmlOut}</body>
-</html>`;
-      content = fullHtml;
-      mimeType = "text/html";
-      extension = ".html";
-    } else if (type === "zip") {
-      const { default: JSZip } = await import("jszip");
-      const base = fileName.replace(/\.[^.]+$/, "") || "document";
-      const zip = new JSZip();
-      const folder = zip.folder(base);
-      if (folder) {
-        folder.file(`${base}.md`, md);
-        const fullHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${fileName}</title>
-</head>
-<body>${htmlOut}</body>
-</html>`;
-        folder.file(`${base}.html`, fullHtml);
-      }
-      zip.generateAsync({ type: "blob" }).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${base}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-      return;
-    } else if (type === "zip-all") {
-      const entries = Object.entries(fileTree).filter(([p]) => !p.endsWith("/"));
-      if (entries.length === 0) {
-        showToast("No files to export", "err");
-        return;
-      }
-      const { default: JSZip } = await import("jszip");
-      const zip = new JSZip();
-      const htmlStyle = `body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}
-pre{background:#f5f5f5;padding:16px;border-radius:6px;overflow-x:auto}
-code{font-family:monospace;font-size:.9em}
-blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.5em 1em;color:#555}
-table{border-collapse:collapse;width:100%;margin:1em 0}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f5f5f5}
-img{max-width:100%}`;
-      entries.forEach(([path, content]) => {
-        const base = path.replace(/\.[^.]+$/, "") || "document";
-        zip.file(`${base}.md`, content);
-        const html = parseMarkdown(content);
-        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${path}</title><style>${htmlStyle}</style></head><body>${html}</body></html>`;
-        zip.file(`${base}.html`, fullHtml);
-      });
-      const zipName = "markdown-studio-export.zip";
-      zip.generateAsync({ type: "blob" }).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = zipName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(`Exported ${entries.length} files as zip`, "ok");
-      });
-      return;
-    }
-    if (!content) return;
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = activeFile.replace(/\.[^.]+$/, "") + extension;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const normalizeFileName = raw => {
