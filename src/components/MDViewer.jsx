@@ -349,7 +349,7 @@ textarea.raw::selection{background:var(--sel)}
 
 /* ── AI PANEL ── */
 .aipanel{width:300px;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s ease}
-.aipanel.closed{width:0;border:none}
+.aipanel.closed{width:0;border:none;display:none}
 
 @media (max-width: 960px){
   .aipanel{
@@ -489,6 +489,26 @@ textarea.raw::selection{background:var(--sel)}
 
 @keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .pb > *{animation:fu .18s ease both}
+
+/* file tree */
+.ft-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 7px;flex-shrink:0}
+.ft-hd-label{font-size:10px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase}
+.ft-hd-actions{display:flex;gap:2px}
+.ft-hd-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:var(--muted);border:none;background:transparent;font-size:14px;transition:color .12s,background .12s}
+.ft-hd-btn:hover{color:var(--text);background:var(--s3)}
+.ft-item{display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s;position:relative;user-select:none}
+.ft-item:hover{background:var(--s3);color:var(--text)}
+.ft-item.on{background:var(--s2);color:var(--bright)}
+.ft-item .ft-actions{display:none;margin-left:auto;gap:2px;flex-shrink:0}
+.ft-item:hover .ft-actions{display:flex}
+.ft-act{width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:3px;cursor:pointer;color:var(--muted);border:none;background:transparent;font-size:11px;transition:color .1s,background .1s;padding:0}
+.ft-act:hover{color:var(--text);background:var(--s2)}
+.ft-act.del:hover{color:var(--red)}
+.ft-input{background:var(--s2);color:var(--text);border:1px solid var(--acc);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 6px;outline:none;width:calc(100% - 24px);margin:2px 8px}
+.ft-chevron{width:14px;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;font-size:10px;color:var(--muted)}
+.ft-chevron.open{transform:rotate(90deg)}
+.ft-icon{flex-shrink:0;display:flex;align-items:center}
+.ft-name{overflow:hidden;text-overflow:ellipsis}
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -514,7 +534,63 @@ const Ic = {
   x:       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   share:   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 11l8-4"/><path d="M8 13l8 4"/></svg>,
   whatsapp:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 19l-1 4 4-1a9 9 0 1015-7 9 9 0 10-18 0z"/><path d="M9 9c0 3 3 6 6 6 .5 0 1-.1 1.4-.3l1.1.3-.3-1.1c.2-.4.3-.9.3-1.4 0-.3-.1-.5-.4-.7l-1.1-.4a.7.7 0 00-.7.1l-.6.6a.4.4 0 01-.4.1c-1-.3-1.8-1.1-2.1-2.1a.4.4 0 01.1-.4l.6-.6a.7.7 0 00.1-.7L12.7 7a.7.7 0 00-.7-.4H12c-.9 0-1.7.8-1.7 1.7z"/></svg>,
+  chevron: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>,
+  folderOpen: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M5 19H3a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1"/><path d="M5 19l2.5-7h14l-2.5 7H5z"/></svg>,
+  folderClosed: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 7c0-1.1.9-2 2-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>,
+  fileMd: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  plus:  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  trash: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>,
+  edit:  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILE TREE HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function buildTree(fileTree) {
+  const root = { name: "", type: "folder", path: "", children: [] };
+  const folders = {};
+  folders[""] = root;
+
+  const ensureFolder = (folderPath) => {
+    if (folders[folderPath]) return folders[folderPath];
+    const parts = folderPath.split("/");
+    const name = parts.pop();
+    const parentPath = parts.join("/");
+    const parent = ensureFolder(parentPath);
+    const node = { name, type: "folder", path: folderPath, children: [] };
+    parent.children.push(node);
+    folders[folderPath] = node;
+    return node;
+  };
+
+  // First pass: create explicit folders (entries ending with /)
+  for (const path of Object.keys(fileTree)) {
+    if (path.endsWith("/")) {
+      ensureFolder(path.slice(0, -1));
+    }
+  }
+
+  // Second pass: add files
+  for (const path of Object.keys(fileTree)) {
+    if (path.endsWith("/")) continue;
+    const parts = path.split("/");
+    const name = parts.pop();
+    const parentPath = parts.join("/");
+    const parent = ensureFolder(parentPath);
+    parent.children.push({ name, type: "file", path, children: [] });
+  }
+
+  // Sort: folders first, then alphabetical
+  const sortChildren = (node) => {
+    node.children.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    node.children.forEach(c => { if (c.type === "folder") sortChildren(c); });
+  };
+  sortChildren(root);
+  return root.children;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AI PANEL COMPONENT
@@ -794,8 +870,25 @@ function AIPanel({ md, selection, onApply }) {
 // MAIN APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function MDViewer() {
-  const [md, setMd]             = useState(SAMPLE);
-  const [fileName, setFileName] = useState("welcome.md");
+  const [fileTree, setFileTree] = useState(() => {
+    if (typeof window === "undefined") return { "welcome.md": SAMPLE };
+    try {
+      const saved = window.localStorage.getItem("mdviewer.fileTree");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { "welcome.md": SAMPLE };
+  });
+  const [activeFile, setActiveFile] = useState(() => {
+    if (typeof window === "undefined") return "welcome.md";
+    try {
+      return window.localStorage.getItem("mdviewer.activeFile") || "welcome.md";
+    } catch {
+      return "welcome.md";
+    }
+  });
+  const initialContent = fileTree[activeFile] ?? SAMPLE;
+  const [md, setMd]             = useState(initialContent);
+  const [fileName, setFileName] = useState(activeFile.split("/").pop() || "welcome.md");
   const [view, setView]         = useState("split");
   const [sidebar, setSidebar]   = useState("files");
   const [aiOpen, setAiOpen]     = useState(true);
@@ -843,6 +936,25 @@ export default function MDViewer() {
   useEffect(() => {
     mdRef.current = md;
   }, [md]);
+
+  // Persist file tree + active file
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("mdviewer.fileTree", JSON.stringify(fileTree));
+        window.localStorage.setItem("mdviewer.activeFile", activeFile);
+      }
+    } catch {}
+  }, [fileTree, activeFile]);
+
+  // When active file changes, load its content
+  useEffect(() => {
+    const content = fileTree[activeFile] ?? "";
+    setMd(content);
+    setHist([content]);
+    setHIdx(0);
+    setFileName(activeFile.split("/").pop() || activeFile);
+  }, [activeFile, fileTree]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -916,6 +1028,10 @@ export default function MDViewer() {
   const commit = useCallback(newMd => {
     setHist(h => { const next=[...h.slice(0,hIdx+1),newMd]; setHIdx(next.length-1); return next; });
     setMd(newMd);
+    setFileTree(tree => ({
+      ...tree,
+      [activeFile]: newMd,
+    }));
     if (sessionId && ytextRef.current && !isRemoteUpdate.current) {
       const ytext = ytextRef.current;
       isRemoteUpdate.current = true;
@@ -923,7 +1039,7 @@ export default function MDViewer() {
       ytext.insert(0, newMd);
       isRemoteUpdate.current = false;
     }
-  }, [hIdx, sessionId]);
+  }, [hIdx, sessionId, activeFile]);
   const undo = useCallback(() => { if(hIdx>0){const ni=hIdx-1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
   const redo = useCallback(() => { if(hIdx<hist.length-1){const ni=hIdx+1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
 
@@ -1023,7 +1139,14 @@ export default function MDViewer() {
   const loadFile = file => {
     if (!file) return;
     const r = new FileReader();
-    r.onload = e => { commit(e.target.result); setFileName(file.name); };
+    r.onload = e => {
+      const name = normalizeFileName(file.name);
+      setFileTree(tree => ({
+        ...tree,
+        [name]: e.target.result,
+      }));
+      setActiveFile(name);
+    };
     r.readAsText(file);
   };
 
@@ -1109,7 +1232,7 @@ img { max-width: 100%; }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = fileName.replace(/\.[^.]+$/, "") + extension;
+    a.download = activeFile.replace(/\.[^.]+$/, "") + extension;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -290,7 +290,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             Launch Editor
           </button>
           <a
-            href="https://github.com"
+            href="https://github.com/stormdotcom/stale-ai-md-react"
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -803,81 +803,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           padding: "0 24px",
         }}
       >
-        <div
-          style={{
-            background: "#161b22",
-            border: "1px solid #21262d",
-            borderRadius: "12px",
-            padding: "32px",
-            display: "flex",
-            gap: "20px",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              background: "#1f6feb18",
-              width: "48px",
-              height: "48px",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#58a6ff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-            </svg>
-          </div>
-          <div style={{ flex: 1, minWidth: "200px" }}>
-            <h3
-              style={{
-                fontSize: "18px",
-                fontWeight: 600,
-                color: "#f0f6fc",
-                margin: "0 0 8px",
-              }}
-            >
-              SEO-Ready & Performance-First
-            </h3>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#8b949e",
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
-              This landing page ships with full Open Graph tags, Twitter Cards,
-              structured JSON-LD data, and a{" "}
-              <code
-                style={{
-                  background: "#21262d",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  fontSize: "13px",
-                }}
-              >
-                &lt;noscript&gt;
-              </code>{" "}
-              fallback for search engine crawlers. For full server-side rendering
-              (SSR), consider migrating to Next.js or Remix — the component
-              architecture is already compatible. Currently deployed as a static
-              SPA on Vercel with pre-rendered meta tags for optimal SEO.
-            </p>
-          </div>
-        </div>
+       
       </section>
 
       {/* CTA */}
@@ -922,21 +848,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         >
           Launch Stale AI Markdown Studio
         </button>
-        <p
-          style={{
-            fontSize: "13px",
-            color: "#484f58",
-            marginTop: "16px",
-          }}
-        >
-          Live at{" "}
-          <a
-            href="https://stale-ai.vercel.app"
-            style={{ color: "#58a6ff", textDecoration: "none" }}
-          >
-            stale-ai.vercel.app
-          </a>
-        </p>
+       
       </section>
 
       {/* Footer */}
@@ -950,8 +862,17 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         }}
       >
         <div>
-          Built with React & Vite. Stale AI Markdown Studio is free and
-          open-source.
+          Stale AI Markdown Studio is free and
+          open-source. Crafted by{" "}
+          <a
+            href="https://ajmalnasumudeen.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#58a6ff", textDecoration: "none" }}
+          >
+            Ajmal Nasumudeen
+          </a>
+          .
         </div>
         <div style={{ marginTop: "8px" }}>
           <a

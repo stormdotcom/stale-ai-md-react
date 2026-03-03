@@ -83,8 +83,9 @@
       }
     }
     </script>
-
-    <!-- Noscript fallback for SSR/SEO crawlers -->
+  </head>
+  <body>
+    <!-- Noscript fallback for SEO crawlers and users without JS -->
     <noscript>
       <style>
         body { background: #0d1117; color: #c9d1d9; font-family: system-ui, -apple-system, sans-serif; padding: 40px; }
@@ -100,8 +101,6 @@
       <p>Free and open-source. Everything runs in your browser — no data leaves your machine.</p>
       <p><a href="https://stale-ai.vercel.app">Open Stale AI Markdown Studio</a></p>
     </noscript>
-  </head>
-  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
