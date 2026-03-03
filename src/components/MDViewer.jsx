@@ -267,9 +267,14 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .sb-btn{background:transparent;border:1px solid var(--bd2);color:var(--dim);border-radius:4px;padding:4px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
 .sb-btn:hover{background:var(--s2);color:var(--text)}
 .sb-sc{flex:1;overflow-y:auto;padding:2px 0 8px}
-.fe{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 18px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s}
+.fe{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 18px;font-size:12px;color:var(--dim);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s;position:relative}
 .fe:hover{background:var(--s3);color:var(--text)}
 .fe.on{background:var(--s2);color:var(--bright)}
+.fe-actions{display:none;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
+.fe:hover .fe-actions{display:flex}
+.fe-act{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:color .1s,background .1s;flex-shrink:0}
+.fe-act:hover{color:var(--text);background:var(--s2)}
+.fe-act.del:hover{color:var(--red)}
 .oi{padding:3px 14px 3px 20px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .1s}
 .oi:hover{color:var(--text)}
 .oi.h1{padding-left:20px;color:var(--dim);font-size:11.5px}
@@ -1452,7 +1457,16 @@ img{max-width:100%}`;
                           style={{ paddingLeft: 18 + depth * 10 }}
                           onClick={() => setActiveFile(path)}
                         >
-                          <span style={{fontSize:13}}>📄</span>{label}
+                          <span style={{fontSize:13}}>📄</span>
+                          <span className="fe-name" style={{flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{label}</span>
+                          <div className="fe-actions" onClick={e=>e.stopPropagation()}>
+                            <button type="button" className="fe-act" title="Rename" onClick={()=>setPromptState({
+                              open: true, title: "Rename file", defaultValue: path, type: "rename", path, folder
+                            })}>{Ic.pencil}</button>
+                            <button type="button" className="fe-act del" title="Remove" onClick={()=>setConfirmState({
+                              open: true, title: "Delete file", description: `Are you sure you want to delete ${path}?`, path
+                            })}>{Ic.trash}</button>
+                          </div>
                         </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent>
