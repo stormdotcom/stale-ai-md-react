@@ -5,32 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary Meta Tags -->
-    <title>Stale AI Markdown Studio - AI-Powered Markdown Editor & Viewer</title>
-    <meta name="title" content="Stale AI Markdown Studio - AI-Powered Markdown Editor & Viewer" />
-    <meta name="description" content="Write, preview, and transform markdown with AI. Stale AI Markdown Studio connects to Ollama, Gemini, and OpenAI to improve, rewrite, and format your text instantly. Free, open-source, client-side editor." />
-    <meta name="keywords" content="markdown editor, AI markdown, markdown viewer, AI writing assistant, ollama markdown, gemini markdown, openai markdown, live preview, markdown formatter, text editor, stale ai" />
+    <title>Stale AI Markdown Studio - AI-Powered Markdown Editor for Spec Driven Development</title>
+    <meta name="title" content="Stale AI Markdown Studio - AI-Powered Markdown Editor for Spec Driven Development" />
+    <meta name="description" content="Write, preview, and transform markdown with AI for modern Spec Driven Development. Stale AI Markdown Studio connects to Ollama, Gemini, and OpenAI to improve, rewrite, and format your specs, docs, and text instantly. Free, open-source, client-side editor." />
+    <meta name="keywords" content="markdown editor, AI markdown, spec driven development, specification editor, markdown viewer, AI writing assistant, ollama markdown, gemini markdown, openai markdown, live preview, markdown formatter, text editor, stale ai, technical writing, API specs, documentation tool" />
     <meta name="author" content="Stale AI" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0d1117" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="application-name" content="Stale AI Markdown Studio" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://stale-ai.vercel.app" />
     <meta property="og:title" content="Stale AI Markdown Studio - AI-Powered Markdown Editor" />
-    <meta property="og:description" content="Write, preview, and transform markdown with AI. Connect to Ollama, Gemini, or OpenAI for instant text improvements. Free and open-source." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:description" content="Write, preview, and transform markdown with AI for modern Spec Driven Development. Connect to Ollama, Gemini, or OpenAI for instant text improvements. Free and open-source." />
+    <meta property="og:image" content="https://stale-ai.vercel.app/og-image.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Stale AI Markdown Studio - Write Markdown, Let AI Polish It" />
     <meta property="og:site_name" content="Stale AI Markdown Studio" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://stale-ai.vercel.app" />
     <meta name="twitter:title" content="Stale AI Markdown Studio - AI-Powered Markdown Editor" />
-    <meta name="twitter:description" content="Write, preview, and transform markdown with AI. Connect to Ollama, Gemini, or OpenAI for instant text improvements." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:description" content="Write, preview, and transform markdown with AI for Spec Driven Development. Connect to Ollama, Gemini, or OpenAI for instant text improvements." />
+    <meta name="twitter:image" content="https://stale-ai.vercel.app/og-image.svg" />
+    <meta name="twitter:image:alt" content="Stale AI Markdown Studio - Write Markdown, Let AI Polish It" />
 
     <!-- Canonical -->
-    <link rel="canonical" href="https://staleai.com/markdown-studio" />
+    <link rel="canonical" href="https://stale-ai.vercel.app" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -38,9 +51,12 @@
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "Stale AI Markdown Studio",
+      "url": "https://stale-ai.vercel.app",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web",
-      "description": "AI-powered markdown editor with live preview. Connect to Ollama, Gemini, or OpenAI for text transformation.",
+      "description": "AI-powered markdown editor for modern Spec Driven Development with live preview. Connect to Ollama, Gemini, or OpenAI for text transformation. Write specs, docs, and technical content with AI assistance.",
+      "image": "https://stale-ai.vercel.app/og-image.svg",
+      "screenshot": "https://stale-ai.vercel.app/og-image.svg",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -49,15 +65,41 @@
       "featureList": [
         "Live markdown preview",
         "AI-powered text formatting",
-        "Ollama integration",
+        "Spec Driven Development workflow",
+        "Ollama integration (local & private)",
         "Gemini integration",
         "OpenAI integration",
         "Split-view editing",
         "Drag and drop file support",
-        "Export to HTML and ZIP"
-      ]
+        "Export to HTML and ZIP",
+        "Client-side processing - no data leaves your browser"
+      ],
+      "applicationSubCategory": "Markdown Editor",
+      "softwareVersion": "1.0.0",
+      "creator": {
+        "@type": "Organization",
+        "name": "Stale AI",
+        "url": "https://stale-ai.vercel.app"
+      }
     }
     </script>
+
+    <!-- Noscript fallback for SSR/SEO crawlers -->
+    <noscript>
+      <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: system-ui, -apple-system, sans-serif; padding: 40px; }
+        h1 { color: #f0f6fc; font-size: 2.5rem; }
+        h2 { color: #58a6ff; }
+        p { color: #8b949e; line-height: 1.6; max-width: 600px; }
+        a { color: #58a6ff; }
+      </style>
+      <h1>Stale AI Markdown Studio</h1>
+      <h2>AI-Powered Markdown Editor for Spec Driven Development</h2>
+      <p>Write, preview, and transform markdown with AI. Connect to Ollama, Gemini, or OpenAI to improve, rewrite, and format your text instantly. Built for modern Spec Driven Development workflows.</p>
+      <p>Features: Live Preview, AI Formatting, Multiple AI Providers (Ollama, Gemini, OpenAI), Split-View Editing, Drag & Drop, Export to HTML/ZIP.</p>
+      <p>Free and open-source. Everything runs in your browser — no data leaves your machine.</p>
+      <p><a href="https://stale-ai.vercel.app">Open Stale AI Markdown Studio</a></p>
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

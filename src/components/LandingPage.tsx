@@ -33,6 +33,33 @@ const features = [
   },
 ];
 
+const sddSteps = [
+  {
+    step: "01",
+    title: "Write Your Spec",
+    desc: "Draft API contracts, feature specs, or technical docs in markdown with live preview.",
+    color: "#58a6ff",
+  },
+  {
+    step: "02",
+    title: "Let AI Refine It",
+    desc: "Use AI to improve clarity, fix grammar, expand details, or shorten verbose sections.",
+    color: "#3fb950",
+  },
+  {
+    step: "03",
+    title: "Review & Export",
+    desc: "Preview the rendered output, iterate fast, then export as HTML or share the spec with your team.",
+    color: "#d2a8ff",
+  },
+  {
+    step: "04",
+    title: "Build from Spec",
+    desc: "Hand off polished specs to developers or AI coding tools. Clear specs mean fewer bugs and faster delivery.",
+    color: "#d29922",
+  },
+];
+
 function FeatureIcon({ path }: { path: string }) {
   return (
     <svg
@@ -120,21 +147,35 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             Stale AI Markdown Studio
           </span>
         </div>
-        <button
-          onClick={onLaunch}
-          style={{
-            background: "#238636",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            padding: "8px 20px",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Open Editor
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <a
+            href="#spec-driven"
+            style={{ color: "#8b949e", textDecoration: "none", fontSize: "14px" }}
+          >
+            Spec Driven Dev
+          </a>
+          <a
+            href="#features"
+            style={{ color: "#8b949e", textDecoration: "none", fontSize: "14px" }}
+          >
+            Features
+          </a>
+          <button
+            onClick={onLaunch}
+            style={{
+              background: "#238636",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              padding: "8px 20px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Open Editor
+          </button>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -148,17 +189,39 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       >
         <div
           style={{
-            display: "inline-block",
-            background: "#1f6feb22",
-            border: "1px solid #1f6feb44",
-            borderRadius: "20px",
-            padding: "4px 14px",
-            fontSize: "13px",
-            color: "#58a6ff",
+            display: "inline-flex",
+            gap: "8px",
             marginBottom: "24px",
+            flexWrap: "wrap",
+            justifyContent: "center",
           }}
         >
-          Free & Open Source
+          <span
+            style={{
+              display: "inline-block",
+              background: "#1f6feb22",
+              border: "1px solid #1f6feb44",
+              borderRadius: "20px",
+              padding: "4px 14px",
+              fontSize: "13px",
+              color: "#58a6ff",
+            }}
+          >
+            Free & Open Source
+          </span>
+          <span
+            style={{
+              display: "inline-block",
+              background: "#23863622",
+              border: "1px solid #23863644",
+              borderRadius: "20px",
+              padding: "4px 14px",
+              fontSize: "13px",
+              color: "#3fb950",
+            }}
+          >
+            Built for Spec Driven Development
+          </span>
         </div>
         <h1
           style={{
@@ -178,15 +241,24 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             fontSize: "18px",
             color: "#8b949e",
             lineHeight: 1.6,
-            maxWidth: "600px",
+            maxWidth: "640px",
             margin: "0 auto 36px",
           }}
         >
-          Stale AI Markdown Studio is a client-side markdown editor with live
-          preview and AI-powered formatting. Connect to Ollama, Gemini, or
-          OpenAI to improve, rewrite, and transform your text instantly.
+          Stale AI Markdown Studio is the editor built for modern{" "}
+          <strong style={{ color: "#c9d1d9" }}>Spec Driven Development</strong>.
+          Write specs, docs, and technical content with live preview — then let
+          AI refine it using Ollama, Gemini, or OpenAI. Everything runs
+          client-side. Your data never leaves your browser.
         </p>
-        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <button
             onClick={onLaunch}
             style={{
@@ -323,31 +395,28 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
                 borderRight: "1px solid #21262d",
               }}
             >
-              <span style={{ color: "#58a6ff" }}># Welcome</span>
+              <span style={{ color: "#58a6ff" }}># API Spec v2</span>
               <br />
               <br />
-              <span>Write your **markdown** here.</span>
+              <span style={{ color: "#58a6ff" }}>## POST /users</span>
+              <br />
+              <span>Create a new user account.</span>
               <br />
               <br />
-              <span style={{ color: "#58a6ff" }}>## Features</span>
+              <span style={{ color: "#58a6ff" }}>### Request Body</span>
               <br />
-              <span>- Live preview</span>
+              <span style={{ color: "#484f58" }}>{"```json"}</span>
               <br />
-              <span>- AI formatting</span>
-              <br />
-              <span>- Multiple providers</span>
-              <br />
-              <br />
-              <span style={{ color: "#484f58" }}>
-                {"```javascript"}
-              </span>
-              <br />
-              <span style={{ color: "#d2a8ff" }}>const</span>{" "}
-              <span style={{ color: "#79c0ff" }}>greeting</span>
-              {" = "}
-              <span style={{ color: "#a5d6ff" }}>"Hello!"</span>;
+              <span>{'{ "name": "string" }'}</span>
               <br />
               <span style={{ color: "#484f58" }}>{"```"}</span>
+              <br />
+              <br />
+              <span style={{ color: "#58a6ff" }}>### Response</span>
+              <br />
+              <span>- **201** — Created</span>
+              <br />
+              <span>- **400** — Validation error</span>
             </div>
             <div
               style={{
@@ -367,50 +436,222 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
                   paddingBottom: "8px",
                 }}
               >
-                Welcome
+                API Spec v2
               </h1>
-              <p style={{ margin: "0 0 16px" }}>
-                Write your <strong style={{ color: "#f0f6fc" }}>markdown</strong>{" "}
-                here.
-              </p>
               <h2
                 style={{
                   fontSize: "20px",
                   fontWeight: 600,
                   color: "#f0f6fc",
+                  margin: "0 0 4px",
+                }}
+              >
+                POST /users
+              </h2>
+              <p style={{ margin: "0 0 12px" }}>Create a new user account.</p>
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "#f0f6fc",
                   margin: "0 0 8px",
                 }}
               >
-                Features
-              </h2>
-              <ul style={{ margin: "0 0 16px", paddingLeft: "20px" }}>
-                <li>Live preview</li>
-                <li>AI formatting</li>
-                <li>Multiple providers</li>
-              </ul>
+                Request Body
+              </h3>
               <pre
                 style={{
                   background: "#0d1117",
                   borderRadius: "6px",
                   padding: "12px",
                   fontSize: "13px",
-                  margin: 0,
+                  margin: "0 0 12px",
                 }}
               >
-                <code>
-                  <span style={{ color: "#d2a8ff" }}>const</span>{" "}
-                  <span style={{ color: "#79c0ff" }}>greeting</span>
-                  {" = "}
-                  <span style={{ color: "#a5d6ff" }}>"Hello!"</span>;
-                </code>
+                <code>{'{ "name": "string" }'}</code>
               </pre>
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "#f0f6fc",
+                  margin: "0 0 8px",
+                }}
+              >
+                Response
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                <li>
+                  <strong style={{ color: "#3fb950" }}>201</strong> — Created
+                </li>
+                <li>
+                  <strong style={{ color: "#f85149" }}>400</strong> — Validation
+                  error
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Spec Driven Development */}
+      <section
+        id="spec-driven"
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto 80px",
+          padding: "0 24px",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div
+            style={{
+              display: "inline-block",
+              background: "#d2992222",
+              border: "1px solid #d2992244",
+              borderRadius: "20px",
+              padding: "4px 14px",
+              fontSize: "13px",
+              color: "#d29922",
+              marginBottom: "16px",
+            }}
+          >
+            Modern Workflow
+          </div>
+          <h2
+            style={{
+              fontSize: "32px",
+              fontWeight: 700,
+              color: "#f0f6fc",
+              marginBottom: "12px",
+            }}
+          >
+            Built for Spec Driven Development
+          </h2>
+          <p
+            style={{
+              fontSize: "16px",
+              color: "#8b949e",
+              maxWidth: "640px",
+              margin: "0 auto",
+              lineHeight: 1.6,
+            }}
+          >
+            Stop coding before you think. Modern teams write specs first — API
+            contracts, feature requirements, architecture docs — then build from
+            a clear blueprint. Stale AI Markdown Studio is designed for this
+            workflow.
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          {sddSteps.map((s) => (
+            <div
+              key={s.step}
+              style={{
+                background: "#161b22",
+                border: "1px solid #21262d",
+                borderRadius: "12px",
+                padding: "24px",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "40px",
+                  fontWeight: 800,
+                  color: s.color,
+                  opacity: 0.15,
+                  position: "absolute",
+                  top: "12px",
+                  right: "16px",
+                  lineHeight: 1,
+                }}
+              >
+                {s.step}
+              </div>
+              <div
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: s.color,
+                  marginBottom: "16px",
+                }}
+              />
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "#f0f6fc",
+                  margin: "0 0 8px",
+                }}
+              >
+                {s.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#8b949e",
+                  lineHeight: 1.5,
+                  margin: 0,
+                }}
+              >
+                {s.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Why SDD matters */}
+        <div
+          style={{
+            marginTop: "32px",
+            background: "#161b22",
+            border: "1px solid #21262d",
+            borderRadius: "12px",
+            padding: "28px 32px",
+            display: "flex",
+            gap: "32px",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {[
+            { val: "40%", label: "Fewer bugs with clear specs" },
+            { val: "2x", label: "Faster dev with AI-polished docs" },
+            { val: "0", label: "Data sent to servers" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{ textAlign: "center", minWidth: "160px" }}
+            >
+              <div
+                style={{
+                  fontSize: "32px",
+                  fontWeight: 800,
+                  color: "#58a6ff",
+                }}
+              >
+                {stat.val}
+              </div>
+              <div style={{ fontSize: "13px", color: "#484f58" }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Features */}
       <section
+        id="features"
         style={{
           maxWidth: "1000px",
           margin: "0 auto 80px",
@@ -554,6 +795,91 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         </div>
       </section>
 
+      {/* SSR & Performance Note */}
+      <section
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto 80px",
+          padding: "0 24px",
+        }}
+      >
+        <div
+          style={{
+            background: "#161b22",
+            border: "1px solid #21262d",
+            borderRadius: "12px",
+            padding: "32px",
+            display: "flex",
+            gap: "20px",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              background: "#1f6feb18",
+              width: "48px",
+              height: "48px",
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#58a6ff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <h3
+              style={{
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "#f0f6fc",
+                margin: "0 0 8px",
+              }}
+            >
+              SEO-Ready & Performance-First
+            </h3>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#8b949e",
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              This landing page ships with full Open Graph tags, Twitter Cards,
+              structured JSON-LD data, and a{" "}
+              <code
+                style={{
+                  background: "#21262d",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                  fontSize: "13px",
+                }}
+              >
+                &lt;noscript&gt;
+              </code>{" "}
+              fallback for search engine crawlers. For full server-side rendering
+              (SSR), consider migrating to Next.js or Remix — the component
+              architecture is already compatible. Currently deployed as a static
+              SPA on Vercel with pre-rendered meta tags for optimal SEO.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section
         style={{
@@ -570,7 +896,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             marginBottom: "16px",
           }}
         >
-          Start writing now
+          Start writing specs now
         </h2>
         <p
           style={{
@@ -596,6 +922,21 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         >
           Launch Stale AI Markdown Studio
         </button>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "#484f58",
+            marginTop: "16px",
+          }}
+        >
+          Live at{" "}
+          <a
+            href="https://stale-ai.vercel.app"
+            style={{ color: "#58a6ff", textDecoration: "none" }}
+          >
+            stale-ai.vercel.app
+          </a>
+        </p>
       </section>
 
       {/* Footer */}
@@ -608,8 +949,18 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           color: "#484f58",
         }}
       >
-        Built with React & Vite. Stale AI Markdown Studio is free and
-        open-source.
+        <div>
+          Built with React & Vite. Stale AI Markdown Studio is free and
+          open-source.
+        </div>
+        <div style={{ marginTop: "8px" }}>
+          <a
+            href="https://stale-ai.vercel.app"
+            style={{ color: "#484f58", textDecoration: "none" }}
+          >
+            stale-ai.vercel.app
+          </a>
+        </div>
       </footer>
     </div>
   );
