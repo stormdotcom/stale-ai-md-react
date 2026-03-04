@@ -303,7 +303,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .fsel:hover{border-color:var(--acc);color:var(--text)}
 
 /* view toolbar */
-.vtbar{height:30px;background:var(--bg);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 8px;gap:2px;flex-shrink:0;overflow-x:auto;overflow-y:hidden}
+.vtbar{height:30px;background:var(--bg);border-bottom:1px solid var(--bd2);display:flex;align-items:center;flex-wrap:nowrap;padding:0 8px;gap:2px;flex-shrink:0;overflow-x:auto;overflow-y:hidden}
 .vtbar::-webkit-scrollbar{height:4px}
 .vb{padding:3px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;background:transparent;color:var(--dim);border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s,color .12s;white-space:nowrap;flex-shrink:0}
 .vb:hover{background:var(--s3);color:var(--text)}
@@ -358,33 +358,46 @@ textarea.raw::selection{background:var(--sel)}
 .pb tr:hover td{background:#111820}
 .pb img{max-width:100%;border-radius:6px;border:1px solid var(--bd);display:block;margin:1em 0}
 
-/* ── AI PANEL (drawer) ── */
+/* ── AI PANEL (centered modal) ── */
+.aipanel-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.aipanel-backdrop.open{
+  opacity:1;
+  pointer-events:auto;
+}
 .aipanel{
-  position:absolute;
-  top:0;
-  right:0;
-  bottom:0;
-  width:320px;
-  max-width:min(320px, 90vw);
+  width:100%;
+  max-width:520px;
+  max-height:90vh;
   background:var(--s1);
-  border-left:1px solid var(--bd);
+  border:1px solid var(--bd);
+  border-radius:12px;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
-  transform:translateX(100%);
-  transition:transform .25s ease, box-shadow .25s ease;
-  z-index:40;
+  overflow:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+  transform:scale(.96);
+  transition:transform .25s ease;
 }
-@media (max-width: 1024px){
-  .aipanel{width:280px;max-width:min(280px, 85vw)}
+.aipanel-backdrop.open .aipanel{
+  transform:scale(1);
 }
-.aipanel.open{
-  transform:translateX(0);
-  box-shadow:-18px 0 40px rgba(0,0,0,.55);
+@media (min-width: 1024px){
+  .aipanel{max-width:600px}
 }
-.aipanel.closed{
-  pointer-events:none;
-  box-shadow:none;
+@media (min-width: 1440px){
+  .aipanel{max-width:680px;max-height:85vh}
 }
 
 /* Responsive layout tweaks */
@@ -399,13 +412,14 @@ textarea.raw::selection{background:var(--sel)}
     display:none;
   }
   .vtbar{
-    min-height:30px;
+    height:30px;
+    padding:0 8px;
   }
+  .vb{padding:3px 8px;font-size:10px}
   .ps{
     padding:20px 16px 40px;
   }
 }
-
 @media (max-width: 640px){
   .filesb{
     position:absolute;
@@ -420,6 +434,7 @@ textarea.raw::selection{background:var(--sel)}
   .fmtbar{
     overflow-x:auto;
   }
+  .vtbar .vb{padding:4px 6px;font-size:10px}
 }
 
 /* Large screens — full viewport, improved spacing */
@@ -429,11 +444,6 @@ textarea.raw::selection{background:var(--sel)}
   }
   .ps{
     padding:40px 48px 80px;
-  }
-  .pb{
-    max-width:900px;
-    margin-left:auto;
-    margin-right:auto;
   }
   .fmtbar{
     padding:0 16px;
@@ -448,7 +458,6 @@ textarea.raw::selection{background:var(--sel)}
     padding:48px 64px 96px;
   }
   .pb{
-    max-width:960px;
     font-size:18px;
   }
   .pb h1{font-size:2.25em}
@@ -456,6 +465,7 @@ textarea.raw::selection{background:var(--sel)}
   .pb h3{font-size:1.2em}
   .gut{font-size:12px}
   textarea.raw{font-size:14px;padding:16px 24px}
+  .aipanel .aip-header{padding:16px 16px 12px}
 }
 
 @media (min-width: 2560px){
@@ -463,7 +473,6 @@ textarea.raw::selection{background:var(--sel)}
     padding:56px 80px 120px;
   }
   .pb{
-    max-width:1060px;
     font-size:19px;
     line-height:2;
   }
@@ -476,6 +485,7 @@ textarea.raw::selection{background:var(--sel)}
   .vtbar{padding:0 16px;height:34px}
   .vb{font-size:12px;padding:4px 12px}
   .fb{min-width:32px;height:30px}
+  .aipanel .aip-header{padding:18px 18px 14px}
 }
 
 .aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
@@ -1076,6 +1086,13 @@ export default function MDViewer() {
   useEffect(() => {
     setSavedSessions(getSavedSessions());
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!aiOpen) return;
+    const h = (e) => { if (e.key === "Escape") setAiOpen(false); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [aiOpen]);
   const [sessionPeers, setSessionPeers] = useState(1);
   const [connectedPeers, setConnectedPeers] = useState([]);
   const [remoteCursors, setRemoteCursors] = useState([]);
@@ -1097,9 +1114,12 @@ export default function MDViewer() {
   const undoManagerRef = useRef(null);
   const ydocRef = useRef(null);
   const ytextRef = useRef(null);
+  const yfileMapRef = useRef(null);   // Y.Map for file tree sync
   const webrtcRef = useRef(null);
   const mdRef = useRef(md);
   const activeFileRef = useRef(activeFile);
+  const fileTreeRef = useRef(fileTree);
+  const textObserverRef = useRef(null); // current Y.Text observer cleanup
 
   useEffect(() => {
     if (styleRef.current) return;
@@ -1115,6 +1135,9 @@ export default function MDViewer() {
   useEffect(() => {
     activeFileRef.current = activeFile;
   }, [activeFile]);
+  useEffect(() => {
+    fileTreeRef.current = fileTree;
+  }, [fileTree]);
 
   // Persist file tree + active file
   useEffect(() => {
@@ -1126,23 +1149,99 @@ export default function MDViewer() {
     } catch {}
   }, [fileTree, activeFile]);
 
-  // When active file changes, load its content
+  // When active file changes, load its content from local tree
+  // (In session mode, attachTextObserver handles syncing Y.Text content)
   useEffect(() => {
-    const content = fileTree[activeFile] ?? "";
-    setMd(content);
+    const content = fileTreeRef.current[activeFile] ?? "";
     if (!sessionId) {
+      setMd(content);
       setLocalHist([content]);
       setLocalHIdx(0);
     }
     setFileName(activeFile.split("/").pop() || activeFile);
-  }, [activeFile, fileTree, sessionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFile]);
+
+  // Helper: attach observer to a Y.Text for the active file
+  const attachTextObserver = useCallback((doc, filePath) => {
+    // Cleanup previous observer
+    if (textObserverRef.current) {
+      textObserverRef.current();
+      textObserverRef.current = null;
+    }
+    if (undoManagerRef.current) {
+      undoManagerRef.current.destroy();
+      undoManagerRef.current = null;
+    }
+
+    const text = doc.getText("file:" + filePath);
+    ytextRef.current = text;
+
+    // Sync initial content: if Y.Text is empty and we have local content, seed it
+    const localContent = fileTreeRef.current[filePath] ?? "";
+    if (text.length === 0 && localContent) {
+      text.insert(0, localContent);
+    } else if (text.length > 0) {
+      // Y.Text has content from peers — adopt it
+      const remote = text.toString();
+      if (remote !== localContent) {
+        isRemoteUpdate.current = true;
+        setMd(remote);
+        setFileTree(tree => ({ ...tree, [filePath]: remote }));
+        isRemoteUpdate.current = false;
+      }
+    }
+
+    // Create per-file UndoManager (Y module stored on doc._YModule in init)
+    try {
+      if (doc._YModule) {
+        undoManagerRef.current = new doc._YModule.UndoManager(text);
+      }
+    } catch {}
+
+    const handleTextChange = () => {
+      if (isRemoteUpdate.current) return;
+      const next = text.toString();
+      if (next === mdRef.current) return;
+      isRemoteUpdate.current = true;
+      const af = activeFileRef.current;
+      const ta = taRef.current;
+      const prevLen = mdRef.current.length;
+      const cursorPos = ta ? ta.selectionStart : 0;
+      setMd(next);
+      setFileTree(tree => ({ ...tree, [af]: next }));
+      if (ta) {
+        const lenDelta = next.length - prevLen;
+        requestAnimationFrame(() => {
+          const newPos = Math.max(0, Math.min(next.length, cursorPos + (cursorPos >= prevLen ? lenDelta : 0)));
+          ta.setSelectionRange(newPos, newPos);
+        });
+      }
+      isRemoteUpdate.current = false;
+    };
+
+    text.observe(handleTextChange);
+    textObserverRef.current = () => text.unobserve(handleTextChange);
+
+    return text;
+  }, []);
+
+  // When activeFile changes and we're in a session, switch Y.Text observer
+  useEffect(() => {
+    if (!sessionId || !ydocRef.current) return;
+    attachTextObserver(ydocRef.current, activeFile);
+    // Broadcast active file to peers
+    if (webrtcRef.current) {
+      webrtcRef.current.awareness.setLocalStateField("activeFile", activeFile);
+    }
+  }, [activeFile, sessionId, attachTextObserver]);
 
   useEffect(() => {
     if (!sessionId) return;
 
     let cancelled = false;
-    let doc, text, provider, undoMgr;
-    let handleTextChange, updatePeers, onSynced;
+    let doc, provider;
+    let updatePeers, onSynced, handleMapChange;
 
     (async () => {
       const [Y, { WebrtcProvider }] = await Promise.all([
@@ -1151,13 +1250,22 @@ export default function MDViewer() {
       ]);
       if (cancelled) return;
       doc = new Y.Doc();
-      text = doc.getText("md");
-      if (text.length === 0 && mdRef.current) {
-        text.insert(0, mdRef.current);
+      // Store Y module reference on doc for UndoManager creation
+      doc._YModule = Y;
+
+      const fileMap = doc.getMap("fileTree");
+      yfileMapRef.current = fileMap;
+
+      // Seed file map with local files if we're the first peer
+      const localTree = fileTreeRef.current;
+      for (const [path, content] of Object.entries(localTree)) {
+        if (!fileMap.has(path)) {
+          fileMap.set(path, content);
+        }
       }
 
-      undoMgr = new Y.UndoManager(text);
-      undoManagerRef.current = undoMgr;
+      // Attach text observer for the current active file
+      attachTextObserver(doc, activeFileRef.current);
 
       const room = `slateai-md-${sessionId}`;
       provider = new WebrtcProvider(room, doc, {
@@ -1172,6 +1280,75 @@ export default function MDViewer() {
           },
         },
       });
+
+      // Observe file map for remote create/delete/rename
+      handleMapChange = (events) => {
+        if (isRemoteUpdate.current) return;
+        isRemoteUpdate.current = true;
+        const currentMap = {};
+        fileMap.forEach((val, key) => {
+          currentMap[key] = val;
+        });
+        // Build new file tree from Y.Map
+        setFileTree(prev => {
+          const next = {};
+          for (const [path] of fileMap.entries()) {
+            // Use Y.Text content if we have it, else use map value, else keep local
+            const ytext = doc.getText("file:" + path);
+            if (ytext.length > 0) {
+              next[path] = ytext.toString();
+            } else {
+              next[path] = fileMap.get(path) ?? prev[path] ?? "";
+            }
+          }
+          // If all files were deleted, keep a default
+          if (Object.keys(next).length === 0) {
+            next["welcome.md"] = SAMPLE;
+          }
+          return next;
+        });
+        // If active file was deleted, switch to first available
+        setActiveFile(prev => {
+          if (!fileMap.has(prev)) {
+            const keys = Array.from(fileMap.keys());
+            return keys[0] || "welcome.md";
+          }
+          return prev;
+        });
+        isRemoteUpdate.current = false;
+      };
+      fileMap.observe(handleMapChange);
+
+      // After sync, adopt the remote file map
+      onSynced = ({ synced }) => {
+        if (!synced || cancelled) return;
+        if (provider.awareness.getStates().size > 1) {
+          showToast("Real-time sync connected", "ok");
+        }
+        // Adopt remote file tree after sync
+        if (fileMap.size > 0) {
+          isRemoteUpdate.current = true;
+          const next = {};
+          fileMap.forEach((val, key) => {
+            const ytext = doc.getText("file:" + key);
+            next[key] = ytext.length > 0 ? ytext.toString() : val;
+          });
+          if (Object.keys(next).length > 0) {
+            setFileTree(next);
+            // Re-attach text observer for active file with synced content
+            const af = activeFileRef.current;
+            if (next[af] !== undefined) {
+              const ytext = doc.getText("file:" + af);
+              if (ytext.length > 0) setMd(ytext.toString());
+            } else {
+              const firstKey = Object.keys(next)[0];
+              setActiveFile(firstKey);
+            }
+          }
+          isRemoteUpdate.current = false;
+        }
+      };
+      provider.on("synced", onSynced);
 
       updatePeers = () => {
         try {
@@ -1198,63 +1375,39 @@ export default function MDViewer() {
       };
 
       provider.awareness.setLocalStateField("identity", clientIdentity);
+      provider.awareness.setLocalStateField("activeFile", activeFileRef.current);
       updatePeers();
       provider.awareness.on("change", updatePeers);
 
-      onSynced = ({ synced }) => {
-        if (synced && !cancelled && provider.awareness.getStates().size > 1) {
-          showToast("Real-time sync connected", "ok");
-        }
-      };
-      provider.on("synced", onSynced);
-
-      handleTextChange = () => {
-        if (isRemoteUpdate.current) return;
-        const next = text.toString();
-        if (next === mdRef.current) return;
-        isRemoteUpdate.current = true;
-        const af = activeFileRef.current;
-        const ta = taRef.current;
-        const prevLen = mdRef.current.length;
-        const cursorPos = ta ? ta.selectionStart : 0;
-        setMd(next);
-        setFileTree((tree) => ({ ...tree, [af]: next }));
-        // Preserve cursor position around remote edits
-        if (ta) {
-          const lenDelta = next.length - prevLen;
-          requestAnimationFrame(() => {
-            const newPos = Math.max(0, Math.min(next.length, cursorPos + (cursorPos >= prevLen ? lenDelta : 0)));
-            ta.setSelectionRange(newPos, newPos);
-          });
-        }
-        isRemoteUpdate.current = false;
-      };
-
-      text.observe(handleTextChange);
-
       ydocRef.current = doc;
-      ytextRef.current = text;
       webrtcRef.current = provider;
     })();
 
     return () => {
       cancelled = true;
-      if (text && handleTextChange) text.unobserve(handleTextChange);
+      if (textObserverRef.current) {
+        textObserverRef.current();
+        textObserverRef.current = null;
+      }
       if (provider) {
         if (onSynced) provider.off("synced", onSynced);
         if (updatePeers) provider.awareness.off("change", updatePeers);
         provider.destroy();
       }
-      if (undoMgr) undoMgr.destroy();
+      if (yfileMapRef.current && handleMapChange) {
+        yfileMapRef.current.unobserve(handleMapChange);
+      }
+      if (undoManagerRef.current) undoManagerRef.current.destroy();
       if (doc) doc.destroy();
       if (webrtcRef.current === provider) webrtcRef.current = null;
       if (ydocRef.current === doc) ydocRef.current = null;
-      if (ytextRef.current === text) ytextRef.current = null;
+      ytextRef.current = null;
+      yfileMapRef.current = null;
       undoManagerRef.current = null;
       setSessionPeers(1);
       setConnectedPeers([]);
     };
-  }, [sessionId, clientIdentity]);
+  }, [sessionId, clientIdentity, attachTextObserver]);
 
   useEffect(() => {
     prevRef.current?.querySelectorAll(".cc").forEach(btn => {
@@ -1284,9 +1437,13 @@ export default function MDViewer() {
           if (diff.deleteCount > 0) ytext.delete(diff.pos, diff.deleteCount);
           if (diff.insert) ytext.insert(diff.pos, diff.insert);
         });
+        // Also update the file map value for peers that join later
+        if (yfileMapRef.current) {
+          yfileMapRef.current.set(activeFile, newMd);
+        }
         isRemoteUpdate.current = false;
       }
-    } else {
+    } else if (!sessionId) {
       // Local (non-session) history
       setLocalHist(h => { const next = [...h.slice(0, localHIdx + 1), newMd]; setLocalHIdx(next.length - 1); return next; });
     }
@@ -1562,10 +1719,17 @@ img{max-width:100%}`;
     const r = new FileReader();
     r.onload = e => {
       const name = normalizeFileName(file.name);
+      const content = e.target.result;
       setFileTree(tree => ({
         ...tree,
-        [name]: e.target.result,
+        [name]: content,
       }));
+      // Sync to session
+      if (sessionId && yfileMapRef.current && ydocRef.current) {
+        yfileMapRef.current.set(name, content);
+        const ytext = ydocRef.current.getText("file:" + name);
+        if (ytext.length === 0) ytext.insert(0, content);
+      }
       setActiveFile(name);
     };
     r.readAsText(file);
@@ -1593,6 +1757,16 @@ img{max-width:100%}`;
         results.forEach(({ path, content }) => { next[path] = content; });
         return next;
       });
+      // Sync imported files to session
+      if (sessionId && yfileMapRef.current && ydocRef.current) {
+        ydocRef.current.transact(() => {
+          results.forEach(({ path, content }) => {
+            yfileMapRef.current.set(path, content);
+            const ytext = ydocRef.current.getText("file:" + path);
+            if (ytext.length === 0) ytext.insert(0, content);
+          });
+        });
+      }
       setActiveFile(results[0].path);
       showToast(`Imported ${results.length} files`, "ok");
     });
@@ -1712,6 +1886,47 @@ img{max-width:100%}`;
     const text = encodeURIComponent(`Join my SlateAI Markdown Studio session: ${url}`);
     const waUrl = `https://wa.me/?text=${text}`;
     window.open(waUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const clearSession = () => {
+    // Destroy Yjs doc + provider (cleanup effect will fire via sessionId change)
+    if (webrtcRef.current) {
+      webrtcRef.current.destroy();
+      webrtcRef.current = null;
+    }
+    if (textObserverRef.current) {
+      textObserverRef.current();
+      textObserverRef.current = null;
+    }
+    if (undoManagerRef.current) {
+      undoManagerRef.current.destroy();
+      undoManagerRef.current = null;
+    }
+    if (ydocRef.current) {
+      ydocRef.current.destroy();
+      ydocRef.current = null;
+    }
+    ytextRef.current = null;
+    yfileMapRef.current = null;
+    // Reset file tree to default
+    const fresh = { "welcome.md": SAMPLE };
+    setFileTree(fresh);
+    setActiveFile("welcome.md");
+    setMd(SAMPLE);
+    setLocalHist([SAMPLE]);
+    setLocalHIdx(0);
+    setSessionPeers(1);
+    setConnectedPeers([]);
+    setRemoteCursors([]);
+    // Clear session from URL
+    setSessionId(null);
+    window.location.hash = "";
+    // Clear persisted data
+    try {
+      window.localStorage.setItem("mdviewer.fileTree", JSON.stringify(fresh));
+      window.localStorage.setItem("mdviewer.activeFile", "welcome.md");
+    } catch {}
+    showToast("Session cleared — fresh start", "ok");
   };
 
   return (
@@ -1875,10 +2090,8 @@ img{max-width:100%}`;
             <button className={`vb${view==="edit"?" on":""}`}    onClick={()=>setView("edit")} title="Edit only">{Ic.pencil} Edit</button>
             <div className="vsep"/>
             <button className="vb" onClick={()=>copyOut("md")} title={copied==="md"?"Copied!":"Copy Markdown to clipboard"}>{copied==="md"?"✓ Copied":"⎘ MD"}</button>
-            <button className="vb" onClick={()=>copyOut("html")} title={copied==="html"?"Copied!":"Copy HTML to clipboard"}>{copied==="html"?"✓ Done":"⎘ HTML"}</button>
             <div className="vsep"/>
             <button className="vb" onClick={()=>downloadFile("md")} title="Download as Markdown file">↓ .md</button>
-            <button className="vb" onClick={()=>downloadFile("html")} title="Download as HTML file — Ctrl+Shift+S">↓ .html</button>
             <button className="vb" onClick={()=>downloadFile("zip")} title="Export current file as .zip (.md + .html)">↓ Zip</button>
             <button className="vb" onClick={()=>downloadFile("zip-all")} title="Export all files as .zip (.md + .html each)">↓ Export all</button>
             <div className="vsep"/>
@@ -1899,6 +2112,14 @@ img{max-width:100%}`;
                 {Ic.whatsapp} WhatsApp
               </button>
             )}
+            <button
+              className="vb"
+              onClick={clearSession}
+              title="Clear session and start fresh"
+              style={sessionId ? { color: "var(--red)" } : {}}
+            >
+              {Ic.trash} Clear
+            </button>
             <DropdownMenu.Root open={sessionDropdownOpen} onOpenChange={setSessionDropdownOpen}>
               <DropdownMenu.Trigger asChild>
                 <button
@@ -2126,9 +2347,17 @@ img{max-width:100%}`;
           </div>
         </div>
 
-        {/* AI Panel (drawer overlay, does not affect layout) */}
-        <div className={`aipanel ${aiOpen ? "open" : "closed"}`}>
-          <AIPanel md={md} selection={selection} onApply={handleAIApply} onHide={() => setAiOpen(false)}/>
+        {/* AI Panel (centered modal) */}
+        <div
+          className={`aipanel-backdrop ${aiOpen ? "open" : ""}`}
+          onClick={(e) => { if (e.target === e.currentTarget) setAiOpen(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="AI Assistant"
+        >
+          <div className="aipanel" onClick={(e) => e.stopPropagation()}>
+            <AIPanel md={md} selection={selection} onApply={handleAIApply} onHide={() => setAiOpen(false)}/>
+          </div>
         </div>
       </div>
 
@@ -2199,12 +2428,18 @@ img{max-width:100%}`;
           const norm = normalizeFileName(value || promptState.defaultValue);
           if (type === "new") {
             setFileTree(tree => ({ ...tree, [norm]: "" }));
+            if (sessionId && yfileMapRef.current && ydocRef.current) {
+              yfileMapRef.current.set(norm, "");
+            }
             setActiveFile(norm);
             showToast(`Created ${norm}`, "ok");
           } else if (type === "newInFolder") {
             const fullPath = folder ? `${folder}/${norm}` : norm;
             const normalized = normalizeFileName(fullPath);
             setFileTree(tree => ({ ...tree, [normalized]: "" }));
+            if (sessionId && yfileMapRef.current && ydocRef.current) {
+              yfileMapRef.current.set(normalized, "");
+            }
             setActiveFile(normalized);
             showToast(`Created ${normalized}`, "ok");
           } else if (type === "rename") {
@@ -2215,6 +2450,19 @@ img{max-width:100%}`;
               next[norm] = content;
               return next;
             });
+            if (sessionId && yfileMapRef.current && ydocRef.current) {
+              const content = yfileMapRef.current.get(path) ?? "";
+              ydocRef.current.transact(() => {
+                yfileMapRef.current.delete(path);
+                yfileMapRef.current.set(norm, content);
+                // Copy Y.Text content to new key
+                const oldText = ydocRef.current.getText("file:" + path);
+                const newText = ydocRef.current.getText("file:" + norm);
+                if (oldText.length > 0 && newText.length === 0) {
+                  newText.insert(0, oldText.toString());
+                }
+              });
+            }
             if (activeFile === path) setActiveFile(norm);
             showToast(`Renamed to ${norm}`, "ok");
           }
@@ -2237,6 +2485,16 @@ img{max-width:100%}`;
             delete next[path];
             return Object.keys(next).length ? next : { "welcome.md": SAMPLE };
           });
+          // Sync delete to session peers
+          if (sessionId && yfileMapRef.current) {
+            yfileMapRef.current.delete(path);
+            // If no files left, seed with default
+            if (yfileMapRef.current.size === 0) {
+              yfileMapRef.current.set("welcome.md", SAMPLE);
+              const ytext = ydocRef.current?.getText("file:welcome.md");
+              if (ytext && ytext.length === 0) ytext.insert(0, SAMPLE);
+            }
+          }
           if (activeFile === path) {
             const remaining = Object.keys(fileTree).filter(p => p !== path);
             setActiveFile(remaining[0] || "welcome.md");
