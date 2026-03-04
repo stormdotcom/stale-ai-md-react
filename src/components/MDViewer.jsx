@@ -314,7 +314,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .sw{flex:1;display:flex;overflow:hidden}
 .rz{width:4px;background:var(--bd2);cursor:col-resize;flex-shrink:0;transition:background .15s}
 .rz:hover,.rz.drag{background:var(--acc)}
-.pane{display:flex;flex-direction:column;overflow:hidden;min-width:60px}
+.pane{display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .pt{height:24px;background:var(--s2);border-bottom:1px solid var(--bd2);display:flex;align-items:center;padding:0 12px;gap:6px;font-size:9.5px;font-weight:600;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase;flex-shrink:0}
 .pp{width:7px;height:7px;border-radius:50%}
 .es{flex:1;display:flex;overflow:hidden}
@@ -324,8 +324,8 @@ textarea.raw{flex:1;background:var(--bg);color:var(--text);border:none;outline:n
 textarea.raw::selection{background:var(--sel)}
 
 /* preview */
-.ps{flex:1;overflow-y:auto;background:var(--bg);padding:32px 32px 60px}
-.pb{max-width:none;width:100%;margin:0 auto;font-family:'Fraunces',serif;font-size:17px;line-height:1.9;color:#bdc3cd}
+.ps{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:32px 32px 60px;min-width:0}
+.pb{max-width:none;width:100%;margin:0 auto;font-family:'Fraunces',serif;font-size:17px;line-height:1.9;color:#bdc3cd;overflow-wrap:break-word;word-wrap:break-word;word-break:break-word}
 .pb h1{font-family:'Fraunces',serif;font-size:2.1em;font-weight:600;color:var(--bright);line-height:1.2;margin:0 0 10px;letter-spacing:-.5px}
 .pb h2{font-size:1.45em;font-weight:600;color:#e8edf2;margin:2.2em 0 .5em;padding-bottom:6px;border-bottom:1px solid var(--bd2);font-family:'Fraunces',serif}
 .pb h3{font-size:1.15em;font-weight:600;color:#d9dfe6;margin:1.8em 0 .4em}
@@ -363,7 +363,7 @@ textarea.raw::selection{background:var(--sel)}
   right:0;
   bottom:0;
   width:320px;
-  max-width:100%;
+  max-width:min(320px, 90vw);
   background:var(--s1);
   border-left:1px solid var(--bd);
   display:flex;
@@ -372,6 +372,9 @@ textarea.raw::selection{background:var(--sel)}
   transform:translateX(100%);
   transition:transform .25s ease, box-shadow .25s ease;
   z-index:40;
+}
+@media (max-width: 1024px){
+  .aipanel{width:280px;max-width:min(280px, 85vw)}
 }
 .aipanel.open{
   transform:translateX(0);
@@ -453,9 +456,32 @@ textarea.raw::selection{background:var(--sel)}
   textarea.raw{font-size:14px;padding:16px 24px}
 }
 
-.aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0}
-.aip-title{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.aip-title-dot{width:6px;height:6px;border-radius:50%;background:var(--purple)}
+@media (min-width: 2560px){
+  .ps{
+    padding:56px 80px 120px;
+  }
+  .pb{
+    max-width:1060px;
+    font-size:19px;
+    line-height:2;
+  }
+  .pb h1{font-size:2.4em}
+  .pb h2{font-size:1.65em}
+  .pb h3{font-size:1.25em}
+  .gut{font-size:13px;width:56px}
+  textarea.raw{font-size:15px;padding:18px 28px}
+  .fmtbar{padding:0 20px;height:40px}
+  .vtbar{padding:0 16px;height:34px}
+  .vb{font-size:12px;padding:4px 12px}
+  .fb{min-width:32px;height:30px}
+}
+
+.aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.aip-header-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.aip-title{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.aip-title-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0}
+.aip-hide-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;flex-shrink:0;transition:color .15s,background .15s}
+.aip-hide-btn:hover{color:var(--text);background:var(--s3)}
 
 /* provider selector */
 .prov-tabs{display:flex;gap:2px;background:var(--s2);border-radius:6px;padding:2px}
@@ -464,10 +490,10 @@ textarea.raw::selection{background:var(--sel)}
 .ptab.on{background:var(--s3);color:var(--bright)}
 
 /* config fields */
-.cfg{padding:10px 14px;border-bottom:1px solid var(--bd2);display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.cfg{padding:10px 14px;border-bottom:1px solid var(--bd2);display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:0}
 .cfg-row{display:flex;flex-direction:column;gap:3px}
 .cfg-label{font-size:9.5px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
-.cfg-input{background:var(--s2);color:var(--text);border:1px solid var(--bd2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%;transition:border-color .15s}
+.cfg-input{background:var(--s2);color:var(--text);border:1px solid var(--bd2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%;min-width:0;max-width:100%;box-sizing:border-box;transition:border-color .15s}
 .cfg-input:focus{border-color:var(--acc)}
 .cfg-input::placeholder{color:var(--muted)}
 .cfg-status{display:flex;align-items:center;gap:5px;font-size:10px;padding:4px 8px;border-radius:4px}
@@ -481,8 +507,8 @@ textarea.raw::selection{background:var(--sel)}
 .aip-actions{flex:1;overflow-y:auto;padding:10px 10px 6px}
 .actions-hd{font-size:9.5px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:4px 4px 8px}
 
-.scope-row{display:flex;gap:4px;padding:0 4px 8px}
-.scope-btn{flex:1;padding:4px 6px;font-size:10px;font-family:'JetBrains Mono',monospace;border:1px solid var(--bd2);border-radius:4px;cursor:pointer;background:transparent;color:var(--dim);transition:all .15s;text-align:center}
+.scope-row{display:flex;gap:4px;padding:0 4px 8px;min-width:0;flex-wrap:wrap}
+.scope-btn{flex:1;min-width:0;padding:4px 6px;font-size:10px;font-family:'JetBrains Mono',monospace;border:1px solid var(--bd2);border-radius:4px;cursor:pointer;background:transparent;color:var(--dim);transition:all .15s;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .scope-btn:hover{border-color:var(--acc);color:var(--acc)}
 .scope-btn.on{background:rgba(88,166,255,.12);border-color:var(--acc);color:var(--acc)}
 
@@ -495,7 +521,7 @@ textarea.raw::selection{background:var(--sel)}
 .custom-ta{width:100%;background:var(--s2);color:var(--text);border:1px solid var(--bd2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 10px;outline:none;resize:none;min-height:60px;transition:border-color .15s}
 .custom-ta:focus{border-color:var(--acc)}
 .custom-ta::placeholder{color:var(--muted)}
-.run-btn{margin-top:6px;width:100%;padding:7px;font-size:11.5px;font-family:'JetBrains Mono',monospace;background:var(--acc);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.run-btn{margin-top:6px;width:100%;min-width:0;padding:7px;font-size:11.5px;font-family:'JetBrains Mono',monospace;background:var(--acc);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
 .run-btn:hover{opacity:.88}
 .run-btn:disabled{opacity:.4;cursor:not-allowed}
 
@@ -570,6 +596,10 @@ textarea.raw::selection{background:var(--sel)}
 .peer-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;cursor:default;flex-shrink:0;line-height:1;letter-spacing:-.5px}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse-live 2s ease-in-out infinite}
 @keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* remote cursors */
+.remote-cursor-label{animation:rc-fade-in .2s ease}
+@keyframes rc-fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -602,6 +632,8 @@ const Ic = {
   plus:  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   trash: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>,
   edit:  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+  panelHide: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
+  panelShow: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -676,7 +708,7 @@ function saveAIConfig(cfg) {
   }
 }
 
-function AIPanel({ md, selection, onApply }) {
+function AIPanel({ md, selection, onApply, onHide }) {
   const defaultProvider = "ollama";
   const defaultCfg = {
     ollama_url:   "http://localhost:11434",
@@ -1034,6 +1066,7 @@ export default function MDViewer() {
   }, [sessionId]);
   const [sessionPeers, setSessionPeers] = useState(1);
   const [connectedPeers, setConnectedPeers] = useState([]);
+  const [remoteCursors, setRemoteCursors] = useState([]);
   const [promptState, setPromptState] = useState({ open: false, title: "", defaultValue: "", type: "", path: "", folder: "" });
   const [confirmState, setConfirmState] = useState({ open: false, title: "", description: "", path: "" });
 
@@ -1131,15 +1164,22 @@ export default function MDViewer() {
           const states = provider.awareness.getStates();
           setSessionPeers(states ? states.size : 1);
           const peers = [];
+          const cursors = [];
           states.forEach((state, clientId) => {
             if (state.identity) {
-              peers.push({ ...state.identity, clientId, isLocal: state.identity.id === clientIdentity.id });
+              const isLocal = state.identity.id === clientIdentity.id;
+              peers.push({ ...state.identity, clientId, isLocal });
+              if (!isLocal && state.cursor != null) {
+                cursors.push({ name: state.identity.name, color: state.identity.color, pos: state.cursor.pos, end: state.cursor.end });
+              }
             }
           });
           setConnectedPeers(peers);
+          setRemoteCursors(cursors);
         } catch {
           setSessionPeers(1);
           setConnectedPeers([]);
+          setRemoteCursors([]);
         }
       };
 
@@ -1410,18 +1450,21 @@ img{max-width:100%}`;
       const inEditor = isEditorFocused();
       const inInput = isInputFocused();
 
-      // Ctrl+S: Save as .md (global)
-      if (mod && e.key === "s") {
-        e.preventDefault();
-        downloadFile("md");
-        showToast("Saved as .md", "ok");
-        return;
-      }
       // Ctrl+Shift+S: Save as .html (global)
-      if (mod && e.shiftKey && e.key === "s") {
+      if (mod && e.shiftKey && e.key === "S") {
         e.preventDefault();
         downloadFile("html");
         showToast("Saved as .html", "ok");
+        return;
+      }
+      // Ctrl+S: Save to localStorage (and sync to session peers)
+      if (mod && e.key === "s") {
+        e.preventDefault();
+        try {
+          window.localStorage.setItem("mdviewer.fileTree", JSON.stringify(fileTree));
+          window.localStorage.setItem("mdviewer.activeFile", activeFile);
+        } catch {}
+        showToast(sessionId ? "Saved & synced to session" : "Saved", "ok");
         return;
       }
       // Ctrl+F: Search (global)
@@ -1452,7 +1495,7 @@ img{max-width:100%}`;
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [applyFmt, undo, redo, downloadFile]);
+  }, [applyFmt, undo, redo, downloadFile, fileTree, activeFile, sessionId]);
 
   // ── Track cursor + selection
   const trackCursor = () => {
@@ -1462,6 +1505,10 @@ img{max-width:100%}`;
     const sel = ta.value.slice(ta.selectionStart,ta.selectionEnd).trim();
     setSelection(sel);
     if (gutRef.current) gutRef.current.scrollTop = ta.scrollTop;
+    // Broadcast cursor position to peers
+    if (webrtcRef.current) {
+      webrtcRef.current.awareness.setLocalStateField("cursor", { pos: ta.selectionStart, end: ta.selectionEnd });
+    }
   };
 
   const handleTabKey = e => {
@@ -1888,7 +1935,7 @@ img{max-width:100%}`;
                 {/* Editor */}
                 <div className="pane" style={epStyle}>
                   <div className="pt"><div className="pp" style={{background:"var(--acc)"}}/>Source</div>
-                  <div className="es">
+                  <div className="es" style={{position:"relative"}}>
                     <div className="gut" ref={gutRef}>
                       {md.split("\n").map((_,i)=>(
                         <div key={i} className={`gl${i+1===cursor.ln?" cur":""}`}>{i+1}</div>
@@ -1902,6 +1949,55 @@ img{max-width:100%}`;
                       spellCheck={false} placeholder="# Start writing…"
                       style={{ whiteSpace: wordWrap ? "pre-wrap" : "pre", wordBreak: wordWrap ? "break-word" : "normal" }}
                     />
+                    {/* Remote user cursors */}
+                    {sessionId && remoteCursors.length > 0 && remoteCursors.map((rc, i) => {
+                      const ta = taRef.current;
+                      if (!ta || rc.pos == null) return null;
+                      const textBefore = md.slice(0, Math.min(rc.pos, md.length));
+                      const linesAbove = textBefore.split("\n");
+                      const lineNum = linesAbove.length;
+                      const colNum = linesAbove[linesAbove.length - 1].length;
+                      // Approximate pixel positions using monospace metrics
+                      const lineH = 13 * 1.65; // font-size * line-height
+                      const charW = 7.8; // approx monospace char width at 13px
+                      const scrollTop = ta.scrollTop || 0;
+                      const scrollLeft = ta.scrollLeft || 0;
+                      const top = (lineNum - 1) * lineH + 12 - scrollTop;
+                      const left = colNum * charW + 48 + 18 - scrollLeft; // 48=gutter, 18=padding
+                      if (top < -20 || top > ta.clientHeight + 20) return null;
+                      return (
+                        <div key={rc.name + i} className="remote-cursor" style={{
+                          position: "absolute",
+                          top, left,
+                          pointerEvents: "none",
+                          zIndex: 3,
+                          transition: "top 0.12s ease, left 0.12s ease",
+                        }}>
+                          <div style={{
+                            width: 2, height: lineH,
+                            background: rc.color,
+                            borderRadius: 1,
+                            boxShadow: `0 0 6px ${rc.color}66`,
+                          }}/>
+                          <div className="remote-cursor-label" style={{
+                            position: "absolute",
+                            top: -18,
+                            left: 0,
+                            background: rc.color,
+                            color: "#fff",
+                            fontSize: 10,
+                            fontWeight: 600,
+                            padding: "1px 6px",
+                            borderRadius: 3,
+                            whiteSpace: "nowrap",
+                            lineHeight: "15px",
+                            fontFamily: "'JetBrains Mono', monospace",
+                          }}>
+                            {rc.name}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1923,7 +2019,7 @@ img{max-width:100%}`;
 
         {/* AI Panel (drawer overlay, does not affect layout) */}
         <div className={`aipanel ${aiOpen ? "open" : "closed"}`}>
-          <AIPanel md={md} selection={selection} onApply={handleAIApply}/>
+          <AIPanel md={md} selection={selection} onApply={handleAIApply} onHide={() => setAiOpen(false)}/>
         </div>
       </div>
 
