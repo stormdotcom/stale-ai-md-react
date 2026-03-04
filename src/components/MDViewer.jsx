@@ -236,7 +236,7 @@ const CSS = `
   --text:#c9d1d9; --dim:#8b949e; --muted:#484f58; --bright:#f0f6fc;
   --sel:#1c3a5e;
 }
-body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);width:100%;height:100vh;overflow:hidden;font-size:13px}
 /* titlebar */
 .titlebar{height:32px;background:var(--s1);border-bottom:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;padding:0 14px;gap:10px;flex-shrink:0;user-select:none;position:relative;z-index:10}
 .tc{font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:6px;pointer-events:none}
@@ -415,6 +415,42 @@ textarea.raw::selection{background:var(--sel)}
   .fmtbar{
     overflow-x:auto;
   }
+}
+
+/* Large screens — full viewport, improved spacing */
+@media (min-width: 1440px){
+  .root{
+    height:calc(100vh - 32px - 22px);
+  }
+  .ps{
+    padding:40px 48px 80px;
+  }
+  .pb{
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .fmtbar{
+    padding:0 16px;
+  }
+  .vtbar{
+    padding:0 12px;
+  }
+}
+
+@media (min-width: 1920px){
+  .ps{
+    padding:48px 64px 96px;
+  }
+  .pb{
+    max-width:960px;
+    font-size:18px;
+  }
+  .pb h1{font-size:2.25em}
+  .pb h2{font-size:1.55em}
+  .pb h3{font-size:1.2em}
+  .gut{font-size:12px}
+  textarea.raw{font-size:14px;padding:16px 24px}
 }
 
 .aip-header{padding:14px 14px 10px;border-bottom:1px solid var(--bd2);flex-shrink:0}

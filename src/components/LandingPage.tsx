@@ -145,6 +145,22 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         @media (min-width: 640px) { .landing-cta { padding: 60px 24px 80px !important; } }
         .landing-footer { padding: 20px 16px !important; font-size: 12px !important; }
         @media (min-width: 640px) { .landing-footer { padding: 24px !important; font-size: 13px !important; } }
+        .landing-hero { max-width: 800px !important; }
+        @media (min-width: 1440px) { .landing-hero { max-width: 960px !important; padding: 96px 32px 80px !important; } }
+        @media (min-width: 1920px) { .landing-hero { max-width: 1100px !important; padding: 120px 48px 100px !important; } }
+        .landing-section { max-width: 1000px !important; }
+        @media (min-width: 1440px) { .landing-section { max-width: 1200px !important; padding: 0 48px !important; } }
+        @media (min-width: 1920px) { .landing-section { max-width: 1400px !important; padding: 0 64px !important; } }
+        .landing-spec-driven { max-width: 1000px !important; }
+        @media (min-width: 1440px) { .landing-spec-driven { max-width: 1200px !important; } }
+        @media (min-width: 1920px) { .landing-spec-driven { max-width: 1400px !important; } }
+        .landing-features { max-width: 1000px !important; }
+        @media (min-width: 1440px) { .landing-features { max-width: 1200px !important; } }
+        @media (min-width: 1920px) { .landing-features { max-width: 1400px !important; } }
+        .landing-ai-providers { max-width: 800px !important; }
+        @media (min-width: 1440px) { .landing-ai-providers { max-width: 1000px !important; } }
+        .landing-faq { max-width: 900px !important; }
+        @media (min-width: 1440px) { .landing-faq { max-width: 1100px !important; } }
       `}</style>
       {/* Nav */}
       <nav
@@ -388,7 +404,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* Spec Driven Development */}
       <section
         id="spec-driven"
-        className="landing-section"
+        className="landing-section landing-spec-driven"
         style={{
           maxWidth: "1000px",
           margin: "0 auto 80px",
@@ -546,7 +562,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* Features */}
       <section
         id="features"
-        className="landing-section"
+        className="landing-section landing-features"
         style={{
           maxWidth: "1000px",
           margin: "0 auto 80px",
@@ -625,7 +641,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
       {/* AI Providers */}
       <section
-        className="landing-section"
+        className="landing-section landing-ai-providers"
         style={{
           maxWidth: "800px",
           margin: "0 auto 80px",
@@ -711,7 +727,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* FAQ */}
       <section
         id="faq"
-        className="landing-section"
+        className="landing-section landing-faq"
         style={{
           maxWidth: "900px",
           margin: "0 auto 80px",
