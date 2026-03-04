@@ -21,8 +21,8 @@ function App() {
     return (
       <div className="flex min-h-screen bg-background text-foreground">
         <Suspense fallback={
-          <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-[#0d1117] text-[#8b949e]">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#30363d] border-t-[#58a6ff]" />
+          <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-[var(--bg)] text-[var(--dim)]">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--bd)] border-t-[var(--acc)]" />
             <span className="text-sm">Loading editor…</span>
           </div>
         }>

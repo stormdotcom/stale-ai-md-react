@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* thin scrollbar — cross-browser (Firefox + WebKit) */
+/* thin scrollbar — cross-browser (Firefox + WebKit), themed */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #30363d transparent;
+  scrollbar-color: var(--bd) transparent;
 }
 *::-webkit-scrollbar {
   width: 5px;
@@ -15,16 +15,16 @@
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: var(--bd);
   border-radius: 6px;
   border: 1px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: var(--muted);
 }
 *::-webkit-scrollbar-thumb:active {
-  background: #6e7681;
+  background: var(--dim);
 }
 *::-webkit-scrollbar-corner {
   background: transparent;

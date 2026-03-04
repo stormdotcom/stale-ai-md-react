@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Server, Sparkles, Bot } from "lucide-react";
+import SpecDrivenAnimation from "./SpecDrivenAnimation";
+import ThemeSelector from "./ThemeSelector";
 
 const features = [
   {
@@ -91,7 +93,7 @@ function FeatureIcon({ path }: { path: string }) {
       height="28"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#58a6ff"
+      stroke="var(--acc)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -106,45 +108,76 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
   return (
     <div
+      className="landing-page"
       style={{
-        background: "#0d1117",
-        color: "#c9d1d9",
+        background: "var(--bg)",
+        color: "var(--text)",
         minHeight: "100vh",
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
       }}
     >
+      <style>{`
+        .landing-page .nav-brand-text { display: none; }
+        @media (min-width: 480px) { .landing-page .nav-brand-text { display: inline; } .landing-page .nav-brand-short { display: none; } }
+        .nav-features-link { display: none; }
+        @media (min-width: 400px) { .nav-features-link { display: inline; } }
+        .landing-nav { padding: 12px 16px !important; }
+        @media (min-width: 640px) { .landing-nav { padding: 16px 24px !important; } }
+        @media (min-width: 1024px) { .landing-nav { padding: 16px 32px !important; } }
+        .landing-hero { padding: 48px 16px 40px !important; }
+        @media (min-width: 640px) { .landing-hero { padding: 64px 24px 50px !important; } }
+        @media (min-width: 1024px) { .landing-hero { padding: 80px 24px 60px !important; } }
+        .landing-hero-desc { font-size: 16px !important; }
+        @media (min-width: 640px) { .landing-hero-desc { font-size: 18px !important; } }
+        .landing-section { padding: 0 16px !important; }
+        @media (min-width: 640px) { .landing-section { padding: 0 24px !important; } }
+        .landing-page { overflow-x: hidden; }
+        .landing-section h2 { font-size: 24px !important; }
+        @media (min-width: 640px) { .landing-section h2 { font-size: 28px !important; } }
+        @media (min-width: 1024px) { .landing-section h2 { font-size: 32px !important; } }
+        .landing-stats-item { min-width: 120px !important; }
+        @media (min-width: 480px) { .landing-stats-item { min-width: 160px !important; } }
+        .landing-sdd-title { font-size: 24px !important; }
+        @media (min-width: 640px) { .landing-sdd-title { font-size: 28px !important; } }
+        @media (min-width: 1024px) { .landing-sdd-title { font-size: 32px !important; } }
+        .landing-cta { padding: 40px 16px 60px !important; }
+        @media (min-width: 640px) { .landing-cta { padding: 60px 24px 80px !important; } }
+        .landing-footer { padding: 20px 16px !important; font-size: 12px !important; }
+        @media (min-width: 640px) { .landing-footer { padding: 24px !important; font-size: 13px !important; } }
+      `}</style>
       {/* Nav */}
       <nav
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 32px",
-          borderBottom: "1px solid #21262d",
+          padding: "12px 16px",
+          borderBottom: "1px solid var(--bd2)",
           position: "sticky",
           top: 0,
-          background: "#0d1117ee",
+          background: "color-mix(in srgb, var(--bg) 93%, transparent)",
           backdropFilter: "blur(12px)",
           zIndex: 50,
         }}
+        className="landing-nav"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
           <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" rx="14" fill="#0d1117" />
+            <rect width="64" height="64" rx="14" fill="var(--bg)" />
             <rect
               x="2"
               y="2"
               width="60"
               height="60"
               rx="12"
-              stroke="#58a6ff"
+              stroke="var(--acc)"
               strokeWidth="2"
               fill="none"
             />
             <path
               d="M14 44V20l10 12 10-12v24"
-              stroke="#c9d1d9"
+              stroke="var(--text)"
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -152,13 +185,13 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             />
             <path
               d="M42 32l8-8v24"
-              stroke="#c9d1d9"
+              stroke="var(--text)"
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
             />
-            <circle cx="50" cy="18" r="8" fill="#1f6feb" />
+            <circle cx="50" cy="18" r="8" fill="var(--acc)" />
             <path
               d="M47 18l2 2 4-4"
               stroke="#fff"
@@ -167,29 +200,34 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               strokeLinejoin="round"
             />
           </svg>
-          <span style={{ fontSize: "18px", fontWeight: 700, color: "#f0f6fc" }}>
+          <span className="nav-brand-short" style={{ fontSize: "16px", fontWeight: 700, color: "var(--bright)" }}>
+            MD Studio
+          </span>
+          <span className="nav-brand-text" style={{ fontSize: "18px", fontWeight: 700, color: "var(--bright)" }}>
             Stale AI Markdown Studio
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-         
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+          <ThemeSelector />
           <a
             href="#features"
-            style={{ color: "#8b949e", textDecoration: "none", fontSize: "14px" }}
+            className="nav-features-link"
+            style={{ color: "var(--dim)", textDecoration: "none", fontSize: "14px" }}
           >
             Features
           </a>
           <button
             onClick={onLaunch}
             style={{
-              background: "#238636",
+              background: "var(--primary)",
               color: "#fff",
               border: "none",
               borderRadius: "6px",
-              padding: "8px 20px",
+              padding: "10px 18px",
               fontSize: "14px",
               fontWeight: 600,
               cursor: "pointer",
+              minHeight: "44px",
             }}
           >
             Open Editor
@@ -201,10 +239,11 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       <section
         style={{
           textAlign: "center",
-          padding: "80px 24px 60px",
+          padding: "48px 16px 40px",
           maxWidth: "800px",
           margin: "0 auto",
         }}
+        className="landing-hero"
       >
         <div
           style={{
@@ -218,12 +257,12 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           <span
             style={{
               display: "inline-block",
-              background: "#1f6feb22",
-              border: "1px solid #1f6feb44",
+              background: "color-mix(in srgb, var(--acc) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--acc) 30%, transparent)",
               borderRadius: "20px",
               padding: "4px 14px",
               fontSize: "13px",
-              color: "#58a6ff",
+              color: "var(--acc)",
             }}
           >
             Free & Open Source
@@ -231,12 +270,12 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           <span
             style={{
               display: "inline-block",
-              background: "#23863622",
-              border: "1px solid #23863644",
+              background: "color-mix(in srgb, var(--green) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--green) 30%, transparent)",
               borderRadius: "20px",
               padding: "4px 14px",
               fontSize: "13px",
-              color: "#3fb950",
+              color: "var(--green)",
             }}
           >
             Built for Spec Driven Development
@@ -246,26 +285,27 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           style={{
             fontSize: "clamp(36px, 6vw, 60px)",
             fontWeight: 800,
-            color: "#f0f6fc",
+            color: "var(--bright)",
             lineHeight: 1.1,
             margin: "0 0 20px",
           }}
         >
           Write Markdown.
           <br />
-          <span style={{ color: "#58a6ff" }}>Let AI Polish It.</span>
+          <span style={{ color: "var(--acc)" }}>Let AI Polish It.</span>
         </h1>
         <p
           style={{
-            fontSize: "18px",
-            color: "#8b949e",
+            fontSize: "16px",
+            color: "var(--dim)",
             lineHeight: 1.6,
             maxWidth: "640px",
-            margin: "0 auto 36px",
+            margin: "0 auto 28px",
           }}
+          className="landing-hero-desc"
         >
           Stale AI Markdown Studio is the editor built for modern{" "}
-          <strong style={{ color: "#c9d1d9" }}>Spec Driven Development</strong>.
+          <strong style={{ color: "var(--text)" }}>Spec Driven Development</strong>.
           Write specs, docs, and technical content with live preview — then let
           AI refine it using Ollama, Gemini, or OpenAI. Everything runs
           client-side. Your data never leaves your browser.
@@ -281,17 +321,18 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           <button
             onClick={onLaunch}
             style={{
-              background: "#238636",
+              background: "var(--primary)",
               color: "#fff",
               border: "none",
               borderRadius: "8px",
-              padding: "14px 32px",
+              padding: "14px 24px",
               fontSize: "16px",
               fontWeight: 600,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              minHeight: "48px",
             }}
           >
             <svg
@@ -313,11 +354,11 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              background: "#21262d",
-              color: "#c9d1d9",
-              border: "1px solid #30363d",
+              background: "var(--s2)",
+              color: "var(--text)",
+              border: "1px solid var(--bd)",
               borderRadius: "8px",
-              padding: "14px 32px",
+              padding: "14px 24px",
               fontSize: "16px",
               fontWeight: 600,
               cursor: "pointer",
@@ -325,6 +366,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               display: "flex",
               alignItems: "center",
               gap: "8px",
+              minHeight: "48px",
             }}
           >
             <svg
@@ -340,198 +382,29 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         </div>
       </section>
 
-      {/* Editor Preview */}
-      <section
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto 80px",
-          padding: "0 24px",
-        }}
-      >
-        <div
-          style={{
-            background: "#161b22",
-            border: "1px solid #30363d",
-            borderRadius: "12px",
-            overflow: "hidden",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.4)",
-          }}
-        >
-          {/* Mock title bar */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 16px",
-              borderBottom: "1px solid #21262d",
-            }}
-          >
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                background: "#f85149",
-              }}
-            />
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                background: "#d29922",
-              }}
-            />
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                background: "#3fb950",
-              }}
-            />
-            <span
-              style={{
-                marginLeft: "auto",
-                fontSize: "13px",
-                color: "#484f58",
-              }}
-            >
-              Stale AI Markdown Studio
-            </span>
-          </div>
-          {/* Mock editor content */}
-          <div style={{ display: "flex", minHeight: "320px" }}>
-            <div
-              style={{
-                flex: 1,
-                padding: "20px",
-                fontFamily: "monospace",
-                fontSize: "14px",
-                lineHeight: 1.7,
-                color: "#8b949e",
-                borderRight: "1px solid #21262d",
-              }}
-            >
-              <span style={{ color: "#58a6ff" }}># API Spec v2</span>
-              <br />
-              <br />
-              <span style={{ color: "#58a6ff" }}>## POST /users</span>
-              <br />
-              <span>Create a new user account.</span>
-              <br />
-              <br />
-              <span style={{ color: "#58a6ff" }}>### Request Body</span>
-              <br />
-              <span style={{ color: "#484f58" }}>{"```json"}</span>
-              <br />
-              <span>{'{ "name": "string" }'}</span>
-              <br />
-              <span style={{ color: "#484f58" }}>{"```"}</span>
-              <br />
-              <br />
-              <span style={{ color: "#58a6ff" }}>### Response</span>
-              <br />
-              <span>- **201** — Created</span>
-              <br />
-              <span>- **400** — Validation error</span>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                padding: "20px",
-                fontSize: "14px",
-                lineHeight: 1.7,
-              }}
-            >
-              <h1
-                style={{
-                  fontSize: "28px",
-                  fontWeight: 700,
-                  color: "#f0f6fc",
-                  margin: "0 0 12px",
-                  borderBottom: "1px solid #21262d",
-                  paddingBottom: "8px",
-                }}
-              >
-                API Spec v2
-              </h1>
-              <h2
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 600,
-                  color: "#f0f6fc",
-                  margin: "0 0 4px",
-                }}
-              >
-                POST /users
-              </h2>
-              <p style={{ margin: "0 0 12px" }}>Create a new user account.</p>
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "#f0f6fc",
-                  margin: "0 0 8px",
-                }}
-              >
-                Request Body
-              </h3>
-              <pre
-                style={{
-                  background: "#0d1117",
-                  borderRadius: "6px",
-                  padding: "12px",
-                  fontSize: "13px",
-                  margin: "0 0 12px",
-                }}
-              >
-                <code>{'{ "name": "string" }'}</code>
-              </pre>
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "#f0f6fc",
-                  margin: "0 0 8px",
-                }}
-              >
-                Response
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                <li>
-                  <strong style={{ color: "#3fb950" }}>201</strong> — Created
-                </li>
-                <li>
-                  <strong style={{ color: "#f85149" }}>400</strong> — Validation
-                  error
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Spec Driven Development Animation */}
+      <SpecDrivenAnimation />
 
       {/* Spec Driven Development */}
       <section
         id="spec-driven"
+        className="landing-section"
         style={{
           maxWidth: "1000px",
           margin: "0 auto 80px",
           padding: "0 24px",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <div
             style={{
               display: "inline-block",
-              background: "#d2992222",
-              border: "1px solid #d2992244",
+              background: "color-mix(in srgb, var(--orange) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--orange) 30%, transparent)",
               borderRadius: "20px",
               padding: "4px 14px",
               fontSize: "13px",
-              color: "#d29922",
+              color: "var(--orange)",
               marginBottom: "16px",
             }}
           >
@@ -541,16 +414,17 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             style={{
               fontSize: "32px",
               fontWeight: 700,
-              color: "#f0f6fc",
+              color: "var(--bright)",
               marginBottom: "12px",
             }}
+            className="landing-sdd-title"
           >
             Built for Spec Driven Development
           </h2>
           <p
             style={{
               fontSize: "16px",
-              color: "#8b949e",
+              color: "var(--dim)",
               maxWidth: "640px",
               margin: "0 auto",
               lineHeight: 1.6,
@@ -573,14 +447,14 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           {sddSteps.map((s) => (
             <div
               key={s.step}
-              style={{
-                background: "#161b22",
-                border: "1px solid #21262d",
-                borderRadius: "12px",
-                padding: "24px",
-                position: "relative",
-              }}
-            >
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bd2)",
+              borderRadius: "12px",
+              padding: "24px",
+              position: "relative",
+            }}
+          >
               <div
                 style={{
                   fontSize: "40px",
@@ -632,8 +506,8 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <div
           style={{
             marginTop: "32px",
-            background: "#161b22",
-            border: "1px solid #21262d",
+            background: "var(--s1)",
+            border: "1px solid var(--bd2)",
             borderRadius: "12px",
             padding: "28px 32px",
             display: "flex",
@@ -649,18 +523,19 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           ].map((stat) => (
             <div
               key={stat.label}
+              className="landing-stats-item"
               style={{ textAlign: "center", minWidth: "160px" }}
             >
               <div
                 style={{
                   fontSize: "32px",
                   fontWeight: 800,
-                  color: "#58a6ff",
+                  color: "var(--acc)",
                 }}
               >
                 {stat.val}
               </div>
-              <div style={{ fontSize: "13px", color: "#484f58" }}>
+              <div style={{ fontSize: "13px", color: "var(--muted)" }}>
                 {stat.label}
               </div>
             </div>
@@ -671,19 +546,20 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* Features */}
       <section
         id="features"
+        className="landing-section"
         style={{
           maxWidth: "1000px",
           margin: "0 auto 80px",
           padding: "0 24px",
         }}
       >
-        <h2
+          <h2
           style={{
             textAlign: "center",
             fontSize: "32px",
             fontWeight: 700,
-            color: "#f0f6fc",
-            marginBottom: "48px",
+            color: "var(--bright)",
+            marginBottom: "32px",
           }}
         >
           Everything you need to write better
@@ -701,8 +577,8 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               onMouseEnter={() => setHoveredFeature(i)}
               onMouseLeave={() => setHoveredFeature(null)}
               style={{
-                background: hoveredFeature === i ? "#161b22" : "#0d1117",
-                border: `1px solid ${hoveredFeature === i ? "#58a6ff44" : "#21262d"}`,
+                background: hoveredFeature === i ? "var(--s1)" : "var(--bg)",
+                border: `1px solid ${hoveredFeature === i ? "color-mix(in srgb, var(--acc) 30%, transparent)" : "var(--bd2)"}`,
                 borderRadius: "12px",
                 padding: "24px",
                 transition: "all 0.2s",
@@ -710,7 +586,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             >
               <div
                 style={{
-                  background: "#1f6feb18",
+                  background: "color-mix(in srgb, var(--acc) 10%, transparent)",
                   width: "48px",
                   height: "48px",
                   borderRadius: "10px",
@@ -726,7 +602,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
                 style={{
                   fontSize: "16px",
                   fontWeight: 600,
-                  color: "#f0f6fc",
+                  color: "var(--bright)",
                   margin: "0 0 8px",
                 }}
               >
@@ -735,7 +611,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               <p
                 style={{
                   fontSize: "14px",
-                  color: "#8b949e",
+                  color: "var(--dim)",
                   lineHeight: 1.5,
                   margin: 0,
                 }}
@@ -749,6 +625,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
       {/* AI Providers */}
       <section
+        className="landing-section"
         style={{
           maxWidth: "800px",
           margin: "0 auto 80px",
@@ -760,7 +637,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           style={{
             fontSize: "28px",
             fontWeight: 700,
-            color: "#f0f6fc",
+            color: "var(--bright)",
             marginBottom: "12px",
           }}
         >
@@ -769,7 +646,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <p
           style={{
             fontSize: "16px",
-            color: "#8b949e",
+            color: "var(--dim)",
             marginBottom: "36px",
           }}
         >
@@ -779,7 +656,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: "24px",
+            gap: "16px",
             flexWrap: "wrap",
           }}
         >
@@ -790,12 +667,12 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           ].map((p) => (
             <div
               key={p.name}
-              style={{
-                background: "#161b22",
-                border: "1px solid #30363d",
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bd)",
                 borderRadius: "12px",
-                padding: "24px 40px",
-                minWidth: "180px",
+                padding: "20px 24px",
+                minWidth: "140px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -825,7 +702,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               >
                 {p.name}
               </div>
-              <div style={{ fontSize: "13px", color: "#484f58" }}>{p.sub}</div>
+              <div style={{ fontSize: "13px", color: "var(--muted)" }}>{p.sub}</div>
             </div>
           ))}
         </div>
@@ -834,6 +711,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* FAQ */}
       <section
         id="faq"
+        className="landing-section"
         style={{
           maxWidth: "900px",
           margin: "0 auto 80px",
@@ -845,7 +723,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             textAlign: "center",
             fontSize: "28px",
             fontWeight: 700,
-            color: "#f0f6fc",
+            color: "var(--bright)",
             marginBottom: "24px",
           }}
         >
@@ -861,18 +739,18 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           {faqs.map((item) => (
             <div
               key={item.q}
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bd2)",
+              borderRadius: "12px",
+              padding: "18px 20px",
+            }}
+          >
+            <h3
               style={{
-                background: "#161b22",
-                border: "1px solid #21262d",
-                borderRadius: "12px",
-                padding: "18px 20px",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  color: "#f0f6fc",
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "var(--bright)",
                   margin: "0 0 8px",
                 }}
               >
@@ -881,7 +759,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               <p
                 style={{
                   fontSize: "14px",
-                  color: "#8b949e",
+                  color: "var(--dim)",
                   lineHeight: 1.6,
                   margin: 0,
                 }}
@@ -897,15 +775,16 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       <section
         style={{
           textAlign: "center",
-          padding: "60px 24px 80px",
-          borderTop: "1px solid #21262d",
+          padding: "40px 16px 60px",
+          borderTop: "1px solid var(--bd2)",
         }}
+        className="landing-cta"
       >
         <h2
           style={{
             fontSize: "32px",
             fontWeight: 700,
-            color: "#f0f6fc",
+            color: "var(--bright)",
             marginBottom: "16px",
           }}
         >
@@ -914,7 +793,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <p
           style={{
             fontSize: "16px",
-            color: "#8b949e",
+            color: "var(--dim)",
             marginBottom: "28px",
           }}
         >
@@ -923,7 +802,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <button
           onClick={onLaunch}
           style={{
-            background: "#238636",
+            background: "var(--primary)",
             color: "#fff",
             border: "none",
             borderRadius: "8px",
@@ -941,12 +820,13 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       {/* Footer */}
       <footer
         style={{
-          borderTop: "1px solid #21262d",
-          padding: "24px",
+          borderTop: "1px solid var(--bd2)",
+          padding: "20px 16px",
           textAlign: "center",
-          fontSize: "13px",
-          color: "#484f58",
+          fontSize: "12px",
+          color: "var(--muted)",
         }}
+        className="landing-footer"
       >
         <div>
           Stale AI Markdown Studio is free and
@@ -955,7 +835,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             href="https://ajmalnasumudeen.in/"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#58a6ff", textDecoration: "none" }}
+            style={{ color: "var(--acc)", textDecoration: "none" }}
           >
             Ajmal Nasumudeen
           </a>

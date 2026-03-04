@@ -25,3 +25,4 @@ dist-ssr
 .ollama-code
 .claude
 nul
+package-lock.json

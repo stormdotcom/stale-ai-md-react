@@ -3,6 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function(){
+        var t=localStorage.getItem("slateai-theme");
+        var themes={
+          "github-dark":{"--bg":"#0d1117","--s1":"#161b22","--s2":"#1c2128","--s3":"#21262d","--bd":"#30363d","--bd2":"#21262d","--acc":"#58a6ff","--primary":"#238636"},
+          "vscode-dark":{"--bg":"#1e1e1e","--s1":"#252526","--s2":"#2d2d30","--s3":"#3c3c3c","--bd":"#454545","--bd2":"#303031","--acc":"#569cd6","--primary":"#0e639c"},
+          "cursor-dark":{"--bg":"#1a1a1a","--s1":"#222222","--s2":"#2a2a2a","--s3":"#333333","--bd":"#404040","--bd2":"#2d2d2d","--acc":"#7c8aff","--primary":"#7c8aff"},
+          "one-dark":{"--bg":"#282c34","--s1":"#21252b","--s2":"#2c323c","--s3":"#3e4451","--bd":"#545862","--bd2":"#3e4451","--acc":"#61afef","--primary":"#61afef"},
+          "dracula":{"--bg":"#282a36","--s1":"#21222c","--s2":"#343746","--s3":"#44475a","--bd":"#6272a4","--bd2":"#44475a","--acc":"#bd93f9","--primary":"#bd93f9"},
+          "monokai":{"--bg":"#272822","--s1":"#1e1f1c","--s2":"#3e3d32","--s3":"#49483e","--bd":"#75715e","--bd2":"#49483e","--acc":"#66d9ef","--primary":"#66d9ef"},
+          "solarized-dark":{"--bg":"#002b36","--s1":"#073642","--s2":"#0d4f5c","--s3":"#134e5c","--bd":"#586e75","--bd2":"#073642","--acc":"#268bd2","--primary":"#268bd2"},
+          "nord":{"--bg":"#2e3440","--s1":"#3b4252","--s2":"#434c5e","--s3":"#4c566a","--bd":"#4c566a","--bd2":"#3b4252","--acc":"#88c0d0","--primary":"#88c0d0"}
+        };
+        var ids=["github-dark","vscode-dark","cursor-dark","one-dark","dracula","monokai","solarized-dark","nord"];
+        if(t&&ids.indexOf(t)>=0&&themes[t]){
+          var r=document.documentElement;
+          for(var k in themes[t])r.style.setProperty(k,themes[t][k]);
+        }
+      })();
+    </script>
 
     <!-- Primary Meta Tags -->
     <title>Stale AI Markdown Studio - AI-Powered Markdown Editor for Spec Driven Development</title>

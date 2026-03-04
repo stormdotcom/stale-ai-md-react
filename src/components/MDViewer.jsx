@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import ThemeSelector from "./ThemeSelector";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAMPLE
@@ -527,6 +528,12 @@ textarea.raw::selection{background:var(--sel)}
 .ft-chevron.open{transform:rotate(90deg)}
 .ft-icon{flex-shrink:0;display:flex;align-items:center}
 .ft-name{overflow:hidden;text-overflow:ellipsis}
+
+/* presence */
+.presence-group{display:flex;align-items:center;gap:4px}
+.peer-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;cursor:default;flex-shrink:0;line-height:1;letter-spacing:-.5px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse-live 2s ease-in-out infinite}
+@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -885,6 +892,59 @@ function AIPanel({ md, selection, onApply }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CLIENT IDENTITY (persistent across sessions)
+// ─────────────────────────────────────────────────────────────────────────────
+const ADJECTIVES = ["Swift","Brave","Calm","Eager","Keen","Bold","Wise","Agile","Vivid","Deft","Noble","Witty","Quick","Sly","Warm","Cool"];
+const ANIMALS = ["Panda","Falcon","Otter","Wolf","Fox","Hawk","Lynx","Bear","Crane","Owl","Tiger","Heron","Eagle","Raven","Elk","Seal"];
+const PEER_COLORS = ["#58a6ff","#3fb950","#ffa657","#f85149","#bc8cff","#39d0ba","#f778ba","#d2a8ff","#79c0ff","#e3b341"];
+
+function getRandomCharacterName() {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  return `${adj} ${animal}`;
+}
+
+function getRandomColor() {
+  return PEER_COLORS[Math.floor(Math.random() * PEER_COLORS.length)];
+}
+
+function getClientIdentity() {
+  const KEY = "mdviewer.clientIdentity";
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  const identity = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2),
+    name: getRandomCharacterName(),
+    color: getRandomColor(),
+  };
+  try { localStorage.setItem(KEY, JSON.stringify(identity)); } catch {}
+  return identity;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DIFF HELPER (minimal edit for Yjs)
+// ─────────────────────────────────────────────────────────────────────────────
+function computeDiff(oldText, newText) {
+  if (oldText === newText) return null;
+  let prefix = 0;
+  const minLen = Math.min(oldText.length, newText.length);
+  while (prefix < minLen && oldText[prefix] === newText[prefix]) prefix++;
+  let oldSuffix = oldText.length;
+  let newSuffix = newText.length;
+  while (oldSuffix > prefix && newSuffix > prefix && oldText[oldSuffix - 1] === newText[newSuffix - 1]) {
+    oldSuffix--;
+    newSuffix--;
+  }
+  return {
+    pos: prefix,
+    deleteCount: oldSuffix - prefix,
+    insert: newText.slice(prefix, newSuffix),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function MDViewer() {
@@ -916,8 +976,8 @@ export default function MDViewer() {
   const [selection, setSelection] = useState("");
   const [copied, setCopied]     = useState(null);
   const [toast, setToast]       = useState(null);
-  const [hist, setHist]         = useState([SAMPLE]);
-  const [hIdx, setHIdx]         = useState(0);
+  const [localHist, setLocalHist] = useState([SAMPLE]);
+  const [localHIdx, setLocalHIdx] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [replaceText, setReplaceText] = useState("");
@@ -937,6 +997,7 @@ export default function MDViewer() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [sessionId]);
   const [sessionPeers, setSessionPeers] = useState(1);
+  const [connectedPeers, setConnectedPeers] = useState([]);
   const [promptState, setPromptState] = useState({ open: false, title: "", defaultValue: "", type: "", path: "", folder: "" });
   const [confirmState, setConfirmState] = useState({ open: false, title: "", description: "", path: "" });
 
@@ -948,8 +1009,9 @@ export default function MDViewer() {
   const styleRef = useRef(null);
   const rzDrag  = useRef({ on:false, x0:0, w0:0 });
   const dc      = useRef(0);
-  const clientIdRef = useRef(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : String(Date.now()));
+  const clientIdentity = useMemo(() => getClientIdentity(), []);
   const isRemoteUpdate = useRef(false);
+  const undoManagerRef = useRef(null);
   const ydocRef = useRef(null);
   const ytextRef = useRef(null);
   const webrtcRef = useRef(null);
@@ -985,16 +1047,20 @@ export default function MDViewer() {
   useEffect(() => {
     const content = fileTree[activeFile] ?? "";
     setMd(content);
-    setHist([content]);
-    setHIdx(0);
+    if (!sessionId) {
+      setLocalHist([content]);
+      setLocalHIdx(0);
+    }
     setFileName(activeFile.split("/").pop() || activeFile);
-  }, [activeFile, fileTree]);
+  }, [activeFile, fileTree, sessionId]);
 
   useEffect(() => {
     if (!sessionId) return;
 
     let cancelled = false;
-    let doc, text, provider;
+    let doc, text, provider, undoMgr;
+    let handleTextChange, updatePeers, onSynced;
+
     (async () => {
       const [Y, { WebrtcProvider }] = await Promise.all([
         import("yjs"),
@@ -1006,6 +1072,9 @@ export default function MDViewer() {
       if (text.length === 0 && mdRef.current) {
         text.insert(0, mdRef.current);
       }
+
+      undoMgr = new Y.UndoManager(text);
+      undoManagerRef.current = undoMgr;
 
       const room = `slateai-md-${sessionId}`;
       provider = new WebrtcProvider(room, doc, {
@@ -1021,41 +1090,55 @@ export default function MDViewer() {
         },
       });
 
-    const updatePeers = () => {
-      try {
-        const states = provider.awareness.getStates();
-        setSessionPeers(states ? states.size : 1);
-      } catch {
-        setSessionPeers(1);
-      }
-    };
+      updatePeers = () => {
+        try {
+          const states = provider.awareness.getStates();
+          setSessionPeers(states ? states.size : 1);
+          const peers = [];
+          states.forEach((state, clientId) => {
+            if (state.identity) {
+              peers.push({ ...state.identity, clientId, isLocal: state.identity.id === clientIdentity.id });
+            }
+          });
+          setConnectedPeers(peers);
+        } catch {
+          setSessionPeers(1);
+          setConnectedPeers([]);
+        }
+      };
 
-    provider.awareness.setLocalStateField("id", clientIdRef.current);
-    updatePeers();
-    provider.awareness.on("change", updatePeers);
+      provider.awareness.setLocalStateField("identity", clientIdentity);
+      updatePeers();
+      provider.awareness.on("change", updatePeers);
 
-    const onSynced = ({ synced }) => {
-      if (synced && !cancelled && provider.awareness.getStates().size > 1) {
-        showToast("Real-time sync connected", "ok");
-      }
-    };
-    provider.on("synced", onSynced);
+      onSynced = ({ synced }) => {
+        if (synced && !cancelled && provider.awareness.getStates().size > 1) {
+          showToast("Real-time sync connected", "ok");
+        }
+      };
+      provider.on("synced", onSynced);
 
-    const handleTextChange = () => {
-      if (isRemoteUpdate.current) return;
-      const next = text.toString();
-      if (next === mdRef.current) return;
-      isRemoteUpdate.current = true;
-      const af = activeFileRef.current;
-      setHist((h) => {
-        const nextHist = [...h, next];
-        setHIdx(nextHist.length - 1);
-        return nextHist;
-      });
-      setMd(next);
-      setFileTree((tree) => ({ ...tree, [af]: next }));
-      isRemoteUpdate.current = false;
-    };
+      handleTextChange = () => {
+        if (isRemoteUpdate.current) return;
+        const next = text.toString();
+        if (next === mdRef.current) return;
+        isRemoteUpdate.current = true;
+        const af = activeFileRef.current;
+        const ta = taRef.current;
+        const prevLen = mdRef.current.length;
+        const cursorPos = ta ? ta.selectionStart : 0;
+        setMd(next);
+        setFileTree((tree) => ({ ...tree, [af]: next }));
+        // Preserve cursor position around remote edits
+        if (ta) {
+          const lenDelta = next.length - prevLen;
+          requestAnimationFrame(() => {
+            const newPos = Math.max(0, Math.min(next.length, cursorPos + (cursorPos >= prevLen ? lenDelta : 0)));
+            ta.setSelectionRange(newPos, newPos);
+          });
+        }
+        isRemoteUpdate.current = false;
+      };
 
       text.observe(handleTextChange);
 
@@ -1066,19 +1149,22 @@ export default function MDViewer() {
 
     return () => {
       cancelled = true;
-      if (text) text.unobserve(handleTextChange);
+      if (text && handleTextChange) text.unobserve(handleTextChange);
       if (provider) {
-        provider.off("synced", onSynced);
-        provider.awareness.off("change", updatePeers);
+        if (onSynced) provider.off("synced", onSynced);
+        if (updatePeers) provider.awareness.off("change", updatePeers);
         provider.destroy();
       }
+      if (undoMgr) undoMgr.destroy();
       if (doc) doc.destroy();
       if (webrtcRef.current === provider) webrtcRef.current = null;
       if (ydocRef.current === doc) ydocRef.current = null;
       if (ytextRef.current === text) ytextRef.current = null;
+      undoManagerRef.current = null;
       setSessionPeers(1);
+      setConnectedPeers([]);
     };
-  }, [sessionId, setHist, setMd, setHIdx, setFileTree]);
+  }, [sessionId, clientIdentity]);
 
   useEffect(() => {
     prevRef.current?.querySelectorAll(".cc").forEach(btn => {
@@ -1091,24 +1177,50 @@ export default function MDViewer() {
 
   const showToast = (msg, type="err") => { setToast({ msg, type }); setTimeout(()=>setToast(null), 3000); };
 
-  // ── History
+  // ── History / commit
   const commit = useCallback(newMd => {
-    setHist(h => { const next=[...h.slice(0,hIdx+1),newMd]; setHIdx(next.length-1); return next; });
     setMd(newMd);
     setFileTree(tree => ({
       ...tree,
       [activeFile]: newMd,
     }));
-    if (sessionId && ytextRef.current && !isRemoteUpdate.current) {
+    if (sessionId && ytextRef.current && ydocRef.current && !isRemoteUpdate.current) {
       const ytext = ytextRef.current;
-      isRemoteUpdate.current = true;
-      ytext.delete(0, ytext.length);
-      ytext.insert(0, newMd);
-      isRemoteUpdate.current = false;
+      const doc = ydocRef.current;
+      const diff = computeDiff(mdRef.current, newMd);
+      if (diff) {
+        isRemoteUpdate.current = true;
+        doc.transact(() => {
+          if (diff.deleteCount > 0) ytext.delete(diff.pos, diff.deleteCount);
+          if (diff.insert) ytext.insert(diff.pos, diff.insert);
+        });
+        isRemoteUpdate.current = false;
+      }
+    } else {
+      // Local (non-session) history
+      setLocalHist(h => { const next = [...h.slice(0, localHIdx + 1), newMd]; setLocalHIdx(next.length - 1); return next; });
     }
-  }, [hIdx, sessionId, activeFile]);
-  const undo = useCallback(() => { if(hIdx>0){const ni=hIdx-1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
-  const redo = useCallback(() => { if(hIdx<hist.length-1){const ni=hIdx+1;setHIdx(ni);setMd(hist[ni]);} }, [hIdx,hist]);
+  }, [localHIdx, sessionId, activeFile]);
+
+  const undo = useCallback(() => {
+    if (sessionId && undoManagerRef.current) {
+      undoManagerRef.current.undo();
+    } else if (localHIdx > 0) {
+      const ni = localHIdx - 1;
+      setLocalHIdx(ni);
+      setMd(localHist[ni]);
+    }
+  }, [sessionId, localHIdx, localHist]);
+
+  const redo = useCallback(() => {
+    if (sessionId && undoManagerRef.current) {
+      undoManagerRef.current.redo();
+    } else if (localHIdx < localHist.length - 1) {
+      const ni = localHIdx + 1;
+      setLocalHIdx(ni);
+      setMd(localHist[ni]);
+    }
+  }, [sessionId, localHIdx, localHist]);
 
   // ── Fmt toolbar
   const applyFmt = useCallback(type => {
@@ -1450,7 +1562,8 @@ img{max-width:100%}`;
   const lines = md.split("\n").length;
   const sbOpen = sidebar !== "closed";
   const htmlOut = useMemo(()=>parseMarkdown(md), [md]);
-  const canUndo = hIdx > 0, canRedo = hIdx < hist.length-1;
+  const canUndo = sessionId ? (undoManagerRef.current ? undoManagerRef.current.undoStack.length > 0 : false) : localHIdx > 0;
+  const canRedo = sessionId ? (undoManagerRef.current ? undoManagerRef.current.redoStack.length > 0 : false) : localHIdx < localHist.length - 1;
 
   const epStyle = view==="edit"    ? { width:"100%", display:"flex" }
                 : view==="preview" ? { width:0, display:"none" }
@@ -1494,6 +1607,9 @@ img{max-width:100%}`;
       {/* Title bar */}
       <div className="titlebar">
         <div className="tc"><div className="gem"/><span>{fileName} — MD Viewer</span></div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
+          <ThemeSelector compact />
+        </div>
       </div>
 
       <div className="root">
@@ -1645,10 +1761,10 @@ img{max-width:100%}`;
             <button
               className={`vb${sessionId ? " on" : ""}`}
               onClick={handleShareSession}
-              title={sessionId ? "Copy session link to share" : "Start real-time collaboration session"}
+              title={sessionId ? `Copy session link · ${sessionPeers} connected` : "Start real-time collaboration session"}
             >
               {Ic.share}
-              {sessionId ? "Copy link" : "Start session"}
+              {sessionId ? `Copy link (${sessionPeers})` : "Start session"}
             </button>
             {sessionId && (
               <button className="vb" onClick={handleWhatsAppShare} title="Share session via WhatsApp">
@@ -1784,8 +1900,25 @@ img{max-width:100%}`;
         {sessionId && (
           <>
             <div className="sd"/>
-            <div className="si" style={{ fontSize:10 }}>
-              Session {sessionId} · {sessionPeers} tab{sessionPeers!==1?"s":""}
+            <div className="si presence-group">
+              <div className="live-dot" title="Live session"/>
+              {connectedPeers.length > 0 ? connectedPeers.map((p, i) => (
+                <span
+                  key={p.id || i}
+                  className="peer-dot"
+                  style={{ background: p.color || "var(--acc)" }}
+                  title={p.isLocal ? `You: ${p.name}` : p.name}
+                >
+                  {(p.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2)}
+                </span>
+              )) : (
+                <span className="peer-dot" style={{ background: clientIdentity.color }} title={`You: ${clientIdentity.name}`}>
+                  {clientIdentity.name.split(" ").map(w => w[0]).join("")}
+                </span>
+              )}
+              <span style={{ fontSize: 10, color: "var(--dim)", marginLeft: 2 }}>
+                {sessionPeers} tab{sessionPeers !== 1 ? "s" : ""}
+              </span>
             </div>
           </>
         )}
