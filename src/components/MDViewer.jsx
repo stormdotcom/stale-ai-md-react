@@ -5,9 +5,11 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import ThemeSelector from "./ThemeSelector";
+import { saveSession, getSavedSessions } from "@/lib/sessions";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAMPLE
@@ -634,6 +636,7 @@ const Ic = {
   edit:  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
   panelHide: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
   panelShow: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>,
+  home: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1064,11 +1067,21 @@ export default function MDViewer() {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [sessionId]);
+
+  useEffect(() => {
+    if (sessionId) saveSession(sessionId);
+  }, [sessionId]);
+
+  useEffect(() => {
+    setSavedSessions(getSavedSessions());
+  }, [sessionId]);
   const [sessionPeers, setSessionPeers] = useState(1);
   const [connectedPeers, setConnectedPeers] = useState([]);
   const [remoteCursors, setRemoteCursors] = useState([]);
   const [promptState, setPromptState] = useState({ open: false, title: "", defaultValue: "", type: "", path: "", folder: "" });
   const [confirmState, setConfirmState] = useState({ open: false, title: "", description: "", path: "" });
+  const [savedSessions, setSavedSessions] = useState([]);
+  const [sessionDropdownOpen, setSessionDropdownOpen] = useState(false);
 
   const taRef   = useRef(null);
   const gutRef  = useRef(null);
@@ -1672,6 +1685,23 @@ img{max-width:100%}`;
     }
   };
 
+  const goHome = () => {
+    if (typeof window === "undefined") return;
+    window.location.hash = "";
+  };
+
+  const switchSession = (id) => {
+    if (typeof window === "undefined") return;
+    if (!id) {
+      window.location.hash = "";
+      setSessionId(null);
+      return;
+    }
+    window.location.hash = `session=${id}`;
+    setSessionId(id);
+    setSessionDropdownOpen(false);
+  };
+
   const handleWhatsAppShare = () => {
     if (!sessionId || typeof window === "undefined") {
       showToast("Start a session first to share", "err");
@@ -1690,7 +1720,21 @@ img{max-width:100%}`;
       {/* Title bar */}
       <div className="titlebar">
         <div className="tc"><div className="gem"/><span>{fileName} — MD Viewer</span></div>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            type="button"
+            onClick={goHome}
+            title="Go to home"
+            style={{
+              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+              border: "none", background: "transparent", color: "var(--dim)", cursor: "pointer",
+              borderRadius: 6, transition: "color .15s, background .15s",
+            }}
+            onMouseEnter={(e)=>{ e.currentTarget.style.color="var(--text)"; e.currentTarget.style.background="var(--s3)"; }}
+            onMouseLeave={(e)=>{ e.currentTarget.style.color="var(--dim)"; e.currentTarget.style.background="transparent"; }}
+          >
+            {Ic.home}
+          </button>
           <ThemeSelector compact />
         </div>
       </div>
@@ -1854,6 +1898,70 @@ img{max-width:100%}`;
                 {Ic.whatsapp} WhatsApp
               </button>
             )}
+            <DropdownMenu.Root open={sessionDropdownOpen} onOpenChange={setSessionDropdownOpen}>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  className="vb"
+                  title="Switch session"
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}
+                >
+                  {Ic.chevron}
+                  {sessionId ? (savedSessions.find(s=>s.id===sessionId)?.label || sessionId.slice(0,8)) : "Local"}
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  style={{
+                    minWidth: 200, padding: 6, background: "var(--s1)", border: "1px solid var(--bd)",
+                    borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", zIndex: 100,
+                  }}
+                  sideOffset={6}
+                  align="end"
+                >
+                  <DropdownMenu.Item
+                    onSelect={() => switchSession(null)}
+                    style={{
+                      padding: "8px 12px", fontSize: 12, color: "var(--text)", cursor: "pointer",
+                      borderRadius: 4, outline: "none", border: "none", background: "transparent",
+                      display: "block", width: "100%", textAlign: "left",
+                    }}
+                    onMouseEnter={(e)=>e.currentTarget.style.background="var(--s3)"}
+                    onMouseLeave={(e)=>e.currentTarget.style.background="transparent"}
+                  >
+                    Local (no session)
+                  </DropdownMenu.Item>
+                  {savedSessions.map((s) => (
+                    <DropdownMenu.Item
+                      key={s.id}
+                      onSelect={() => switchSession(s.id)}
+                      style={{
+                        padding: "8px 12px", fontSize: 12,
+                        color: sessionId === s.id ? "var(--acc)" : "var(--text)",
+                        cursor: "pointer", borderRadius: 4, outline: "none", border: "none",
+                        background: "transparent", display: "block", width: "100%", textAlign: "left",
+                      }}
+                      onMouseEnter={(e)=>e.currentTarget.style.background="var(--s3)"}
+                      onMouseLeave={(e)=>e.currentTarget.style.background="transparent"}
+                    >
+                      {s.label} {sessionId === s.id ? "✓" : ""}
+                    </DropdownMenu.Item>
+                  ))}
+                  <DropdownMenu.Separator style={{ height: 1, background: "var(--bd2)", margin: "4px 0" }} />
+                  <DropdownMenu.Item
+                    onSelect={goHome}
+                    style={{
+                      padding: "8px 12px", fontSize: 12, color: "var(--dim)", cursor: "pointer",
+                      borderRadius: 4, outline: "none", border: "none", background: "transparent",
+                      display: "block", width: "100%", textAlign: "left",
+                    }}
+                    onMouseEnter={(e)=>{ e.currentTarget.style.background="var(--s3)"; e.currentTarget.style.color="var(--text)"; }}
+                    onMouseLeave={(e)=>{ e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--dim)"; }}
+                  >
+                    {Ic.home} Go to home
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             <div style={{flex:1}}/>
             <span className="badge" title="Word count">{words}w</span>
             <span className="badge" style={{marginLeft:4}} title="Line count">{lines}L</span>

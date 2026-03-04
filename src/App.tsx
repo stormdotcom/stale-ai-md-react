@@ -11,7 +11,7 @@ function App() {
 
   useEffect(() => {
     const onHashChange = () => {
-      if (window.location.hash.includes('session=')) setView('editor')
+      setView(window.location.hash.includes('session=') ? 'editor' : 'landing')
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -32,7 +32,15 @@ function App() {
     )
   }
 
-  return <LandingPage onLaunch={() => setView('editor')} />
+  return (
+    <LandingPage
+      onLaunch={() => setView('editor')}
+      onLaunchSession={(sessionId) => {
+        window.location.hash = `session=${sessionId}`
+        setView('editor')
+      }}
+    />
+  )
 }
 
 export default App

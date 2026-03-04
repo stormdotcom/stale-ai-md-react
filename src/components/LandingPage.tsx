@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Server, Sparkles, Bot } from "lucide-react";
 import SpecDrivenAnimation from "./SpecDrivenAnimation";
 import ThemeSelector from "./ThemeSelector";
+import { getSavedSessions, type SavedSession } from "../lib/sessions";
 
 const features = [
   {
@@ -103,8 +104,18 @@ function FeatureIcon({ path }: { path: string }) {
   );
 }
 
-export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
+interface LandingPageProps {
+  onLaunch: () => void;
+  onLaunchSession?: (sessionId: string) => void;
+}
+
+export default function LandingPage({ onLaunch, onLaunchSession }: LandingPageProps) {
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
+  const [sessions, setSessions] = useState<SavedSession[]>([]);
+
+  useEffect(() => {
+    setSessions(getSavedSessions());
+  }, []);
 
   return (
     <div
@@ -225,13 +236,7 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
           <ThemeSelector />
-          <a
-            href="#features"
-            className="nav-features-link"
-            style={{ color: "var(--dim)", textDecoration: "none", fontSize: "14px" }}
-          >
-            Features
-          </a>
+          
           <button
             onClick={onLaunch}
             style={{
@@ -396,6 +401,68 @@ export default function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             GitHub
           </a>
         </div>
+
+        {/* Your Sessions */}
+        {sessions.length > 0 && onLaunchSession && (
+          <div
+            style={{
+              marginTop: "32px",
+              padding: "20px 24px",
+              background: "var(--s1)",
+              border: "1px solid var(--bd2)",
+              borderRadius: "12px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "var(--bright)",
+                marginBottom: "12px",
+              }}
+            >
+              Your sessions
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {sessions.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => onLaunchSession(s.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    background: "var(--s2)",
+                    border: "1px solid var(--bd2)",
+                    borderRadius: "8px",
+                    color: "var(--text)",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--acc)";
+                    e.currentTarget.style.background = "var(--s3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--bd2)";
+                    e.currentTarget.style.background = "var(--s2)";
+                  }}
+                >
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {s.label}
+                  </span>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", flexShrink: 0, marginLeft: "8px" }}>
+                    {s.id.slice(0, 8)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Spec Driven Development Animation */}
