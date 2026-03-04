@@ -1,0 +1,218 @@
+/**
+ * Global theme definitions — VS Code–style palettes for landing + editor.
+ * Variables: --bg, --s1, --s2, --s3, --bd, --bd2, --acc, --teal, --green, --orange, --red, --purple, --text, --dim, --muted, --bright, --sel, --primary (CTA button)
+ */
+export type ThemeId =
+  | "github-dark"
+  | "vscode-dark"
+  | "cursor-dark"
+  | "one-dark"
+  | "dracula"
+  | "monokai"
+  | "solarized-dark"
+  | "nord";
+
+export interface Theme {
+  id: ThemeId;
+  name: string;
+  vars: Record<string, string>;
+}
+
+export const themes: Theme[] = [
+  {
+    id: "github-dark",
+    name: "GitHub Dark",
+    vars: {
+      "--bg": "#0d1117",
+      "--s1": "#161b22",
+      "--s2": "#1c2128",
+      "--s3": "#21262d",
+      "--bd": "#30363d",
+      "--bd2": "#21262d",
+      "--acc": "#58a6ff",
+      "--teal": "#39d0ba",
+      "--green": "#3fb950",
+      "--orange": "#ffa657",
+      "--red": "#f85149",
+      "--purple": "#bc8cff",
+      "--text": "#c9d1d9",
+      "--dim": "#8b949e",
+      "--muted": "#484f58",
+      "--bright": "#f0f6fc",
+      "--sel": "#1c3a5e",
+      "--primary": "#238636",
+    },
+  },
+  {
+    id: "vscode-dark",
+    name: "VS Code Dark+",
+    vars: {
+      "--bg": "#1e1e1e",
+      "--s1": "#252526",
+      "--s2": "#2d2d30",
+      "--s3": "#3c3c3c",
+      "--bd": "#454545",
+      "--bd2": "#303031",
+      "--acc": "#569cd6",
+      "--teal": "#4ec9b0",
+      "--green": "#6a9955",
+      "--orange": "#ce9178",
+      "--red": "#f44747",
+      "--purple": "#c586c0",
+      "--text": "#d4d4d4",
+      "--dim": "#9cdcfe",
+      "--muted": "#6e7681",
+      "--bright": "#cccccc",
+      "--sel": "#264f78",
+      "--primary": "#0e639c",
+    },
+  },
+  {
+    id: "cursor-dark",
+    name: "Cursor Dark",
+    vars: {
+      "--bg": "#1a1a1a",
+      "--s1": "#222222",
+      "--s2": "#2a2a2a",
+      "--s3": "#333333",
+      "--bd": "#404040",
+      "--bd2": "#2d2d2d",
+      "--acc": "#7c8aff",
+      "--teal": "#4ec9b0",
+      "--green": "#6a9955",
+      "--orange": "#d7ba7d",
+      "--red": "#f44747",
+      "--purple": "#c586c0",
+      "--text": "#e4e4e4",
+      "--dim": "#b0b0b0",
+      "--muted": "#6e6e6e",
+      "--bright": "#ffffff",
+      "--sel": "#3a3a5c",
+      "--primary": "#7c8aff",
+    },
+  },
+  {
+    id: "one-dark",
+    name: "One Dark",
+    vars: {
+      "--bg": "#282c34",
+      "--s1": "#21252b",
+      "--s2": "#2c323c",
+      "--s3": "#3e4451",
+      "--bd": "#545862",
+      "--bd2": "#3e4451",
+      "--acc": "#61afef",
+      "--teal": "#56b6c2",
+      "--green": "#98c379",
+      "--orange": "#d19a66",
+      "--red": "#e06c75",
+      "--purple": "#c678dd",
+      "--text": "#abb2bf",
+      "--dim": "#5c6370",
+      "--muted": "#4b5263",
+      "--bright": "#e5e7eb",
+      "--sel": "#3e4451",
+      "--primary": "#61afef",
+    },
+  },
+  {
+    id: "dracula",
+    name: "Dracula",
+    vars: {
+      "--bg": "#282a36",
+      "--s1": "#21222c",
+      "--s2": "#343746",
+      "--s3": "#44475a",
+      "--bd": "#6272a4",
+      "--bd2": "#44475a",
+      "--acc": "#bd93f9",
+      "--teal": "#8be9fd",
+      "--green": "#50fa7b",
+      "--orange": "#ffb86c",
+      "--red": "#ff5555",
+      "--purple": "#bd93f9",
+      "--text": "#f8f8f2",
+      "--dim": "#6272a4",
+      "--muted": "#44475a",
+      "--bright": "#f8f8f2",
+      "--sel": "#44475a",
+      "--primary": "#bd93f9",
+    },
+  },
+  {
+    id: "monokai",
+    name: "Monokai",
+    vars: {
+      "--bg": "#272822",
+      "--s1": "#1e1f1c",
+      "--s2": "#3e3d32",
+      "--s3": "#49483e",
+      "--bd": "#75715e",
+      "--bd2": "#49483e",
+      "--acc": "#66d9ef",
+      "--teal": "#a6e22e",
+      "--green": "#a6e22e",
+      "--orange": "#fd971f",
+      "--red": "#f92672",
+      "--purple": "#ae81ff",
+      "--text": "#f8f8f2",
+      "--dim": "#75715e",
+      "--muted": "#49483e",
+      "--bright": "#f8f8f0",
+      "--sel": "#49483e",
+      "--primary": "#66d9ef",
+    },
+  },
+  {
+    id: "solarized-dark",
+    name: "Solarized Dark",
+    vars: {
+      "--bg": "#002b36",
+      "--s1": "#073642",
+      "--s2": "#0d4f5c",
+      "--s3": "#134e5c",
+      "--bd": "#586e75",
+      "--bd2": "#073642",
+      "--acc": "#268bd2",
+      "--teal": "#2aa198",
+      "--green": "#859900",
+      "--orange": "#cb4b16",
+      "--red": "#dc322f",
+      "--purple": "#d33682",
+      "--text": "#839496",
+      "--dim": "#586e75",
+      "--muted": "#657b83",
+      "--bright": "#eee8d5",
+      "--sel": "#073642",
+      "--primary": "#268bd2",
+    },
+  },
+  {
+    id: "nord",
+    name: "Nord",
+    vars: {
+      "--bg": "#2e3440",
+      "--s1": "#3b4252",
+      "--s2": "#434c5e",
+      "--s3": "#4c566a",
+      "--bd": "#4c566a",
+      "--bd2": "#3b4252",
+      "--acc": "#88c0d0",
+      "--teal": "#8fbcbb",
+      "--green": "#a3be8c",
+      "--orange": "#d08770",
+      "--red": "#bf616a",
+      "--purple": "#b48ead",
+      "--text": "#d8dee9",
+      "--dim": "#81a1c1",
+      "--muted": "#4c566a",
+      "--bright": "#eceff4",
+      "--sel": "#434c5e",
+      "--primary": "#88c0d0",
+    },
+  },
+];
+
+export const defaultThemeId: ThemeId = "github-dark";
+
+export const THEME_STORAGE_KEY = "slateai-theme";
