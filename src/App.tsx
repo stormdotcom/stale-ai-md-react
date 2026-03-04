@@ -4,14 +4,17 @@ import LandingPage from './components/LandingPage'
 const MDViewer = lazy(() => import('./components/MDViewer.jsx'))
 
 function App() {
+  const isEditor = (hash: string) =>
+    hash.includes('session=') || hash === '#editor' || hash === '#local'
+
   const [view, setView] = useState<'landing' | 'editor'>(() => {
     if (typeof window === 'undefined') return 'landing'
-    return window.location.hash.includes('session=') ? 'editor' : 'landing'
+    return isEditor(window.location.hash) ? 'editor' : 'landing'
   })
 
   useEffect(() => {
     const onHashChange = () => {
-      setView(window.location.hash.includes('session=') ? 'editor' : 'landing')
+      setView(isEditor(window.location.hash) ? 'editor' : 'landing')
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -34,7 +37,10 @@ function App() {
 
   return (
     <LandingPage
-      onLaunch={() => setView('editor')}
+      onLaunch={() => {
+        window.location.hash = '#editor'
+        setView('editor')
+      }}
       onLaunchSession={(sessionId) => {
         window.location.hash = `session=${sessionId}`
         setView('editor')

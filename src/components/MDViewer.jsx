@@ -1062,7 +1062,8 @@ export default function MDViewer() {
   useEffect(() => {
     const onHashChange = () => {
       const m = window.location.hash.match(/session=([^&]+)/);
-      if (m && m[1] !== sessionId) setSessionId(m[1]);
+      const next = m ? m[1] : null;
+      if (next !== sessionId) setSessionId(next);
     };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
@@ -1692,14 +1693,14 @@ img{max-width:100%}`;
 
   const switchSession = (id) => {
     if (typeof window === "undefined") return;
-    if (!id) {
-      window.location.hash = "";
+    setSessionDropdownOpen(false);
+    if (id == null) {
+      window.location.hash = "#editor";
       setSessionId(null);
       return;
     }
     window.location.hash = `session=${id}`;
     setSessionId(id);
-    setSessionDropdownOpen(false);
   };
 
   const handleWhatsAppShare = () => {
@@ -1946,7 +1947,7 @@ img{max-width:100%}`;
                       {s.label} {sessionId === s.id ? "✓" : ""}
                     </DropdownMenu.Item>
                   ))}
-                  <DropdownMenu.Separator style={{ height: 1, background: "var(--bd2)", margin: "4px 0" }} />
+                  <div style={{ height: 1, background: "var(--bd2)", margin: "4px 0" }} role="separator" />
                   <DropdownMenu.Item
                     onSelect={goHome}
                     style={{
