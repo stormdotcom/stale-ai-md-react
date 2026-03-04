@@ -245,7 +245,7 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .gem{width:14px;height:14px;background:linear-gradient(135deg,var(--acc) 40%,var(--purple));border-radius:3px;flex-shrink:0}
 
 /* root layout */
-.root{display:flex;height:calc(100vh - 32px - 22px);position:relative;overflow:hidden}
+.root{display:flex;width:100%;min-width:0;height:calc(100vh - 32px - 22px);position:relative;overflow:hidden}
 
 /* activity bar */
 .actbar{width:46px;background:var(--s1);border-right:1px solid var(--bd2);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;flex-shrink:0}
@@ -441,6 +441,12 @@ textarea.raw::selection{background:var(--sel)}
 @media (min-width: 1440px){
   .root{
     height:calc(100vh - 32px - 22px);
+    width:100%;
+    max-width:100%;
+  }
+  .center,.ea,.sw{
+    width:100%;
+    max-width:100%;
   }
   .ps{
     padding:40px 48px 80px;
@@ -453,7 +459,16 @@ textarea.raw::selection{background:var(--sel)}
   }
 }
 
+/* 2xl (1536px) — full width editor */
+@media (min-width: 1536px){
+  .root{width:100%;max-width:100%}
+  .center,.ea,.sw,.pane{width:100%;max-width:100%;min-width:0}
+}
+
+/* 3xl (1920px) — full width editor */
 @media (min-width: 1920px){
+  .root{width:100%;max-width:100%}
+  .center,.ea,.sw,.pane{width:100%;max-width:100%;min-width:0}
   .ps{
     padding:48px 64px 96px;
   }
@@ -1050,7 +1065,14 @@ export default function MDViewer() {
   const [fileName, setFileName] = useState(activeFile.split("/").pop() || "welcome.md");
   const [view, setView]         = useState("split");
   const [sidebar, setSidebar]   = useState("files");
-  const [aiOpen, setAiOpen]     = useState(true);
+  const AI_OPEN_KEY = "mdviewer.aiOpen";
+  const [aiOpen, setAiOpen]     = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const v = window.localStorage.getItem(AI_OPEN_KEY);
+      return v === null ? true : v === "1";
+    } catch { return true; }
+  });
   const [editorW, setEditorW]   = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [cursor, setCursor]     = useState({ ln:1, col:1 });
@@ -1086,6 +1108,10 @@ export default function MDViewer() {
   useEffect(() => {
     setSavedSessions(getSavedSessions());
   }, [sessionId]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(AI_OPEN_KEY, aiOpen ? "1" : "0"); } catch {}
+  }, [aiOpen]);
 
   useEffect(() => {
     if (!aiOpen) return;
@@ -1240,33 +1266,68 @@ export default function MDViewer() {
     if (!sessionId) return;
 
     let cancelled = false;
-    let doc, provider;
+    let doc, provider, idbProvider;
     let updatePeers, onSynced, handleMapChange;
+    let seedTimeout;
 
     (async () => {
-      const [Y, { WebrtcProvider }] = await Promise.all([
+      const [Y, { WebrtcProvider }, { IndexeddbPersistence }] = await Promise.all([
         import("yjs"),
         import("y-webrtc"),
+        import("y-indexeddb"),
       ]);
       if (cancelled) return;
       doc = new Y.Doc();
-      // Store Y module reference on doc for UndoManager creation
       doc._YModule = Y;
+
+      // ── IndexedDB persistence: survives refresh, offline, tab close
+      const idbName = `slateai-md-${sessionId}`;
+      idbProvider = new IndexeddbPersistence(idbName, doc);
 
       const fileMap = doc.getMap("fileTree");
       yfileMapRef.current = fileMap;
 
-      // Seed file map with local files if we're the first peer
-      const localTree = fileTreeRef.current;
-      for (const [path, content] of Object.entries(localTree)) {
-        if (!fileMap.has(path)) {
-          fileMap.set(path, content);
+      // Wait for IDB to load before seeding, so we don't overwrite persisted data
+      await new Promise(resolve => {
+        if (idbProvider.synced) { resolve(); return; }
+        idbProvider.once("synced", resolve);
+      });
+      if (cancelled) return;
+
+      // Seed file map only if IDB had nothing (first time for this session)
+      if (fileMap.size === 0) {
+        const localTree = fileTreeRef.current;
+        doc.transact(() => {
+          for (const [path, content] of Object.entries(localTree)) {
+            fileMap.set(path, content);
+            const ytext = doc.getText("file:" + path);
+            if (ytext.length === 0 && content) ytext.insert(0, content);
+          }
+        });
+      } else {
+        // IDB had data — adopt it
+        isRemoteUpdate.current = true;
+        const next = {};
+        fileMap.forEach((val, key) => {
+          const ytext = doc.getText("file:" + key);
+          next[key] = ytext.length > 0 ? ytext.toString() : val;
+        });
+        if (Object.keys(next).length > 0) {
+          setFileTree(next);
+          const af = activeFileRef.current;
+          if (next[af] !== undefined) {
+            setMd(doc.getText("file:" + af).toString() || next[af]);
+          } else {
+            setActiveFile(Object.keys(next)[0]);
+          }
         }
+        isRemoteUpdate.current = false;
       }
 
       // Attach text observer for the current active file
       attachTextObserver(doc, activeFileRef.current);
 
+      // ── WebRTC provider: P2P sync
       const room = `slateai-md-${sessionId}`;
       provider = new WebrtcProvider(room, doc, {
         signaling: ["wss://y-webrtc-eu.fly.dev"],
@@ -1276,38 +1337,42 @@ export default function MDViewer() {
               { urls: "stun:stun.l.google.com:19302" },
               { urls: "stun:stun1.l.google.com:19302" },
               { urls: "stun:stun2.l.google.com:19302" },
+              { urls: "stun:stun3.l.google.com:19302" },
+              { urls: "stun:stun4.l.google.com:19302" },
+              // Free TURN relay for peers behind symmetric NAT
+              {
+                urls: "turn:openrelay.metered.ca:80",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
+              {
+                urls: "turn:openrelay.metered.ca:443",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
+              {
+                urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
             ],
           },
         },
       });
 
-      // Observe file map for remote create/delete/rename
-      handleMapChange = (events) => {
+      // ── Observe file map for remote create/delete/rename
+      handleMapChange = () => {
         if (isRemoteUpdate.current) return;
         isRemoteUpdate.current = true;
-        const currentMap = {};
-        fileMap.forEach((val, key) => {
-          currentMap[key] = val;
-        });
-        // Build new file tree from Y.Map
-        setFileTree(prev => {
+        setFileTree(() => {
           const next = {};
           for (const [path] of fileMap.entries()) {
-            // Use Y.Text content if we have it, else use map value, else keep local
             const ytext = doc.getText("file:" + path);
-            if (ytext.length > 0) {
-              next[path] = ytext.toString();
-            } else {
-              next[path] = fileMap.get(path) ?? prev[path] ?? "";
-            }
+            next[path] = ytext.length > 0 ? ytext.toString() : (fileMap.get(path) ?? "");
           }
-          // If all files were deleted, keep a default
-          if (Object.keys(next).length === 0) {
-            next["welcome.md"] = SAMPLE;
-          }
+          if (Object.keys(next).length === 0) next["welcome.md"] = SAMPLE;
           return next;
         });
-        // If active file was deleted, switch to first available
         setActiveFile(prev => {
           if (!fileMap.has(prev)) {
             const keys = Array.from(fileMap.keys());
@@ -1319,13 +1384,14 @@ export default function MDViewer() {
       };
       fileMap.observe(handleMapChange);
 
-      // After sync, adopt the remote file map
+      // ── After WebRTC sync, adopt remote peers' data
       onSynced = ({ synced }) => {
         if (!synced || cancelled) return;
-        if (provider.awareness.getStates().size > 1) {
-          showToast("Real-time sync connected", "ok");
+        const peerCount = provider.awareness.getStates().size;
+        if (peerCount > 1) {
+          showToast(`Synced with ${peerCount - 1} peer${peerCount > 2 ? "s" : ""}`, "ok");
         }
-        // Adopt remote file tree after sync
+        // Adopt remote file tree if it has content
         if (fileMap.size > 0) {
           isRemoteUpdate.current = true;
           const next = {};
@@ -1335,14 +1401,12 @@ export default function MDViewer() {
           });
           if (Object.keys(next).length > 0) {
             setFileTree(next);
-            // Re-attach text observer for active file with synced content
             const af = activeFileRef.current;
             if (next[af] !== undefined) {
               const ytext = doc.getText("file:" + af);
               if (ytext.length > 0) setMd(ytext.toString());
             } else {
-              const firstKey = Object.keys(next)[0];
-              setActiveFile(firstKey);
+              setActiveFile(Object.keys(next)[0]);
             }
           }
           isRemoteUpdate.current = false;
@@ -1350,6 +1414,7 @@ export default function MDViewer() {
       };
       provider.on("synced", onSynced);
 
+      // ── Awareness: identity + peers
       updatePeers = () => {
         try {
           const states = provider.awareness.getStates();
@@ -1385,6 +1450,7 @@ export default function MDViewer() {
 
     return () => {
       cancelled = true;
+      clearTimeout(seedTimeout);
       if (textObserverRef.current) {
         textObserverRef.current();
         textObserverRef.current = null;
@@ -1398,6 +1464,8 @@ export default function MDViewer() {
         yfileMapRef.current.unobserve(handleMapChange);
       }
       if (undoManagerRef.current) undoManagerRef.current.destroy();
+      // Keep IDB provider alive — don't destroy it, so data persists
+      if (idbProvider) idbProvider.destroy();
       if (doc) doc.destroy();
       if (webrtcRef.current === provider) webrtcRef.current = null;
       if (ydocRef.current === doc) ydocRef.current = null;
@@ -1889,7 +1957,8 @@ img{max-width:100%}`;
   };
 
   const clearSession = () => {
-    // Destroy Yjs doc + provider (cleanup effect will fire via sessionId change)
+    const oldSessionId = sessionId;
+    // Destroy Yjs doc + provider
     if (webrtcRef.current) {
       webrtcRef.current.destroy();
       webrtcRef.current = null;
@@ -1908,6 +1977,13 @@ img{max-width:100%}`;
     }
     ytextRef.current = null;
     yfileMapRef.current = null;
+    // Clear IndexedDB persistence for this session
+    if (oldSessionId) {
+      try {
+        const dbName = `slateai-md-${oldSessionId}`;
+        indexedDB.deleteDatabase(dbName);
+      } catch {}
+    }
     // Reset file tree to default
     const fresh = { "welcome.md": SAMPLE };
     setFileTree(fresh);
@@ -1930,7 +2006,7 @@ img{max-width:100%}`;
   };
 
   return (
-    <div className="flex flex-col h-screen"
+    <div className="flex flex-col h-screen w-full min-w-0 overflow-x-hidden"
       onDragEnter={onDE} onDragLeave={onDL} onDragOver={e=>e.preventDefault()} onDrop={onDrop}>
 
       {/* Title bar */}

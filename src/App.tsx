@@ -22,7 +22,7 @@ function App() {
 
   if (view === 'editor') {
     return (
-      <div className="flex min-h-screen w-full min-w-0 bg-background text-foreground">
+      <div className="flex min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-background text-foreground">
         <Suspense fallback={
           <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-[var(--bg)] text-[var(--dim)]">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--bd)] border-t-[var(--acc)]" />
