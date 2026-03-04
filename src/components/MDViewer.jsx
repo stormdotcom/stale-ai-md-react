@@ -1832,8 +1832,8 @@ img{max-width:100%}`;
             <button className="vb" onClick={()=>copyOut("md")} title={copied==="md"?"Copied!":"Copy Markdown to clipboard"}>{copied==="md"?"✓ Copied":"⎘ MD"}</button>
             <button className="vb" onClick={()=>copyOut("html")} title={copied==="html"?"Copied!":"Copy HTML to clipboard"}>{copied==="html"?"✓ Done":"⎘ HTML"}</button>
             <div className="vsep"/>
-            <button className="vb" onClick={()=>downloadFile("md")} title="Save as Markdown file — Ctrl+S">↓ Save .md</button>
-            <button className="vb" onClick={()=>downloadFile("html")} title="Save as HTML file — Ctrl+Shift+S">↓ Save .html</button>
+            <button className="vb" onClick={()=>downloadFile("md")} title="Download as Markdown file">↓ .md</button>
+            <button className="vb" onClick={()=>downloadFile("html")} title="Download as HTML file — Ctrl+Shift+S">↓ .html</button>
             <button className="vb" onClick={()=>downloadFile("zip")} title="Export current file as .zip (.md + .html)">↓ Zip</button>
             <button className="vb" onClick={()=>downloadFile("zip-all")} title="Export all files as .zip (.md + .html each)">↓ Export all</button>
             <div className="vsep"/>
